@@ -6,6 +6,7 @@ const userRoutes = require("./routes/userRoutes");
 const getReportRoutes = require("./routes/getReportRoutes");
 const stockpickRoutes = require("./routes/stockpickRoutes");
 const stockRoutes = require("./routes/stockRoutes");
+const stockDetailRoutes = require("./routes/stockDetailRoutes");
 const vnindexpickRoutes = require("./routes/vnindexpickRoutes");
 
 const app = express();
@@ -19,6 +20,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/getReports", getReportRoutes);
 app.use("/api/stockpicks", stockpickRoutes);
 app.use("/api/stocks", stockRoutes);
+app.use("/api/stockDetails", stockDetailRoutes);
 app.use("/api/vnindexpicks", vnindexpickRoutes);
 
 module.exports = app;

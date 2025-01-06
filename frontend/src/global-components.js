@@ -40,3 +40,5 @@ Vue.prototype.$callApi = callApi;
 
 import * as XLSX from "xlsx";
 Vue.prototype.$XLSX = XLSX;
+
+import "vue-select/dist/vue-select.css";

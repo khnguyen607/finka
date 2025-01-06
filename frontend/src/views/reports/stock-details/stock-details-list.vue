@@ -6,7 +6,7 @@
       </b-card-header>
       <b-card-body>
         <b-row>
-          <b-col md="6">
+          <b-col sm="6">
             <b-form-group label="Từ ngày" label-for="mc-date-from">
               <b-form-datepicker
                 v-model="searchData.dateFrom"
@@ -15,7 +15,7 @@
               />
             </b-form-group>
           </b-col>
-          <b-col md="6">
+          <b-col sm="6">
             <b-form-group label="Đến ngày" label-for="mc-date-to">
               <b-form-datepicker
                 v-model="searchData.dateTo"
@@ -24,6 +24,54 @@
               />
             </b-form-group>
           </b-col>
+
+          <b-col md="4">
+            <b-form-group label="Mã cổ phiếu" label-for="mc-stockId">
+              <v-select
+                v-model="searchData.stockId"
+                id="mc-stockId"
+                :options="options.stocks"
+                :reduce="(option) => option.id"
+                placeholder="Chọn mã cổ phiếu"
+                :clearable="false"
+                @input="onStockChange"
+              />
+            </b-form-group>
+          </b-col>
+          <b-col md="4" sm="6">
+            <b-form-group label="Ngành" label-for="mc-field">
+              <b-form-input
+                v-model="searchData.field"
+                id="mc-field"
+                type="text"
+                placeholder="Không có dữ liệu"
+                readonly
+              />
+            </b-form-group>
+          </b-col>
+          <b-col md="4" sm="6">
+            <b-form-group label="Xếp hạng BCTC" label-for="mc-financialRank">
+              <b-form-input
+                v-model="searchData.financialRank"
+                id="mc-financialRank"
+                type="text"
+                placeholder="Không có dữ liệu"
+                readonly
+              />
+            </b-form-group>
+          </b-col>
+          <!-- <b-col md="3" sm="6">
+            <b-form-group label="Quý" label-for="mc-quarter">
+              <b-form-input
+                v-model="searchData.quarter"
+                id="mc-quarter"
+                type="text"
+                placeholder="Không có dữ liệu"
+                readonly
+              />
+            </b-form-group>
+          </b-col> -->
+
           <!-- submit and reset -->
           <b-col class="d-flex justify-content-center">
             <b-button
@@ -40,7 +88,7 @@
     </b-card>
     <b-card p-5>
       <b-card-header class="d-flex justify-content-between align-items-center">
-        <b-card-title>Mã cổ phiếu khuyến nghị</b-card-title>
+        <b-card-title>Phiên giao dịch chi tiết</b-card-title>
         <div>
           <b-button
             v-if="userData.role === 'ADMIN'"
@@ -163,9 +211,10 @@
       hide-footer
       size="lg"
     >
-      <StockCreateOrEdit
+      <StockDetailCreateOrEdit
         :edit="edit"
         :id="id"
+        :stockId="searchData.stockId"
         @submitted="
           getData();
           showModal = false;
@@ -177,6 +226,7 @@
 </template>
 
 <script>
+import vSelect from "vue-select";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
 import {
   BCard,
@@ -198,10 +248,11 @@ import {
 } from "bootstrap-vue";
 import { VueGoodTable } from "vue-good-table";
 import { exportExcel } from "@/views/components/exportExcel/ExportExcel";
-import StockCreateOrEdit from "./stock-details-create-or-edit.vue";
+import StockDetailCreateOrEdit from "./stock-details-create-or-edit.vue";
 
 export default {
   components: {
+    "v-select": vSelect,
     VueGoodTable,
     BCard,
     BCardBody,
@@ -219,12 +270,16 @@ export default {
     BFormDatepicker,
     BRow,
     BCol,
-    StockCreateOrEdit,
+    StockDetailCreateOrEdit,
   },
   data() {
     return {
       userData: JSON.parse(localStorage.getItem("userData")),
       searchData: {
+        stockId: null,
+        field: null,
+        financialRank: null,
+        quarter: null,
         dateFrom: null,
         dateTo: null,
       },
@@ -348,6 +403,9 @@ export default {
       showModal: false,
       edit: false,
       id: null,
+      options: {
+        stocks: [],
+      },
     };
   },
   computed: {
@@ -380,12 +438,40 @@ export default {
         width: 30,
       };
     });
+    await this.getStocks();
     await this.getData();
   },
   methods: {
+    onStockChange(stockId) {
+      this.$router.push(`/reports/stock-details/list/${stockId}`);
+      this.getData();
+    },
+    async getStocks() {
+      await this.$callApi.get("/api/stocks").then((res) => {
+        const data = res.data.data;
+        data.forEach((item) => {
+          this.options.stocks.push({
+            id: item.id,
+            value: item.id,
+            label: `${item.code} - ${item.quarter}`,
+          });
+        });
+      });
+    },
     async getData() {
       await this.$callApi
-        .post("/api/stockpicks/date", {
+        .get("/api/stocks/" + this.$route.params.id)
+        .then((res) => {
+          const data = res.data.data;
+          this.searchData.stockId = data.id;
+          this.searchData.field = data.field;
+          this.searchData.financialRank = data.financialRank;
+          this.searchData.quarter = data.quarter;
+        });
+
+      await this.$callApi
+        .post("/api/stockDetails/date", {
+          stockId: this.$route.params.id,
           dateFrom: this.searchData.dateFrom,
           dateTo: this.searchData.dateTo,
         })
@@ -410,7 +496,7 @@ export default {
     },
     async deleteItem(id) {
       await this.$callApi
-        .delete("/api/stockpicks/" + id)
+        .delete("/api/stockDetails/" + id)
         .then(async () => {
           await this.getData();
           this.$toast({

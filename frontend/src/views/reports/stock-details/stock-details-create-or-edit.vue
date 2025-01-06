@@ -8,26 +8,6 @@
           </b-form-group>
         </b-col>
         <b-col md="3">
-          <b-form-group label="Mã CK" label-for="mc-code">
-            <b-form-input
-              v-model="dataForm.code"
-              id="mc-code"
-              type="text"
-              placeholder="Mã CK"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="Ngành" label-for="mc-field">
-            <b-form-input
-              v-model="dataForm.field"
-              id="mc-field"
-              type="text"
-              placeholder="Ngành"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
           <b-form-group label="Thị giá" label-for="mc-price">
             <b-form-input
               v-model="dataForm.price"
@@ -35,6 +15,16 @@
               type="number"
               step="0.01"
               placeholder="Thị giá"
+            />
+          </b-form-group>
+        </b-col>
+        <b-col md="3">
+          <b-form-group label="P&L hiện tại" label-for="mc-pl">
+            <b-form-input
+              v-model="dataForm.pl"
+              id="mc-pl"
+              type="number"
+              placeholder="P&L hiện tại"
             />
           </b-form-group>
         </b-col>
@@ -97,6 +87,26 @@
               id="mc-roe"
               type="number"
               placeholder="ROE"
+            />
+          </b-form-group>
+        </b-col>
+        <b-col md="3">
+          <b-form-group label="Định giá" label-for="mc-valuationLevel">
+            <b-form-input
+              v-model="dataForm.valuationLevel"
+              id="mc-valuationLevel"
+              type="text"
+              placeholder="Định giá"
+            />
+          </b-form-group>
+        </b-col>
+        <b-col md="3">
+          <b-form-group label="Tín hiệu kỹ thuật" label-for="mc-techSignal">
+            <b-form-input
+              v-model="dataForm.techSignal"
+              id="mc-techSignal"
+              type="text"
+              placeholder="Lệnh mua/bán"
             />
           </b-form-group>
         </b-col>
@@ -192,32 +202,39 @@ export default {
       type: Number,
       default: null,
     },
+    stockId: {
+      type: Number,
+      required: true,
+    },
   },
   data() {
     return {
       dataForm: {
+        stockId: this.stockId,
         date: null,
-        code: null,
-        field: null,
         price: null,
+        pl: null,
         rcm: null,
         bsRate: null,
         bsCycle: null,
         pte: null,
         ptb: null,
         roe: null,
+        valuationLevel: null,
+        techSignal: null,
       },
       fieldMapping: {
         "Ngày báo cáo": "date",
-        "Mã CK": "code",
-        Ngành: "field",
         "Thị giá": "price",
+        "P&L hiện tại": "pl",
         "Lệnh mua/bán": "rcm",
         "Tỷ lệ mua/bán": "bsRate",
         "Chu kỳ mua/bán": "bsCycle",
         "P/E": "pte",
         "P/B": "ptb",
         ROE: "roe",
+        "Định giá": "valuationLevel",
+        "Tín hiệu kỹ thuật": "techSignal",
       },
       showModal: false,
       dataImport: null,
@@ -225,7 +242,7 @@ export default {
   },
   async created() {
     if (this.edit) {
-      await this.$callApi.get("/api/stockpicks/" + this.id).then((res) => {
+      await this.$callApi.get("/api/stockDetails/" + this.id).then((res) => {
         this.dataForm = res.data.data;
         this.dataForm.date = new Date(res.data.data.date)
           .toISOString()
@@ -237,9 +254,12 @@ export default {
     async onSubmit() {
       try {
         if (this.edit) {
-          await this.$callApi.put("/api/stockpicks/" + this.id, this.dataForm);
+          await this.$callApi.put(
+            "/api/stockDetails/" + this.id,
+            this.dataForm
+          );
         } else {
-          await this.$callApi.post("/api/stockpicks", this.dataForm);
+          await this.$callApi.post("/api/stockDetails", this.dataForm);
         }
         this.$toast({
           component: ToastificationContent,
@@ -283,8 +303,8 @@ export default {
         try {
           this.dataImport = translateFields(await excelToJson(file));
           console.log(this.dataImport);
-          await this.$callApi.post("/api/stockpicks/createList", {
-            stockpickList: this.dataImport,
+          await this.$callApi.post("/api/stockDetails/createList", {
+            stockDetailList: { stockId: this.stockId, ...this.dataImport },
             overwrite: false,
           });
           this.$toast({
@@ -317,8 +337,11 @@ export default {
       }
     },
     async handleOverwrite() {
-      await this.$callApi.post("/api/stockpicks/createList", {
-        stockpickList: this.dataImport,
+      await this.$callApi.post("/api/stockDetails/createList", {
+        stockDetailList: {
+          stockId: this.stockId,
+          ...this.dataImport,
+        },
         overwrite: true,
       });
       this.$toast({

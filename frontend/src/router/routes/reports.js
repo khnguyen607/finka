@@ -35,4 +35,13 @@ export default [
       action: "read",
     },
   },
+  {
+    path: "/reports/stock-details/list/:id",
+    name: "reports-stock-details",
+    component: () => import("@/views/reports/stock-details/stock-details-list.vue"),
+    meta: {
+      resource: "ACL",
+      action: "read",
+    },
+  },
 ];
