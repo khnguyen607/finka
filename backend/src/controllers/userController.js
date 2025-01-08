@@ -10,9 +10,13 @@ const getUsers = async (req, res) => {
   try {
     const users = await User.findAll({
       raw: true,
+      attributes: {
+        exclude: ["password"],
+      },
     });
     const formattedUsers = users.map((user) => ({
       ...user,
+      password: null,
     }));
     res.status(200).json({
       message: "Users retrieved successfully",
@@ -265,6 +269,30 @@ const updateUserStatus = async (req, res) => {
   }
 };
 
+// Cập nhật người dùng
+const addCodeLiked = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { codeLiked } = req.body;
+
+    const user = await User.findByPk(id); // Tìm người dùng theo ID
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Cập nhật thông tin người dùng
+    await user.update({
+      codeLiked,
+    });
+    res.status(200).json({
+      message: "User updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Xuất các hàm CRUD
 module.exports = {
   getUsers,
@@ -275,4 +303,5 @@ module.exports = {
   login,
   register,
   updateUserStatus,
+  addCodeLiked,
 };

@@ -8,6 +8,7 @@ const {
   createUser,
   updateUser,
   deleteUser,
+  addCodeLiked,
 } = require("../controllers/userController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
@@ -20,6 +21,7 @@ router.post("/updateUserStatus", authMiddleware, updateUserStatus);
 router.get("/", authMiddleware, getUsers);
 router.get("/:id", authMiddleware, getUserById);
 router.post("/", authMiddleware, createUser);
+router.put("/addCodeLiked/:id", authMiddleware, addCodeLiked);
 router.put("/:id", authMiddleware, updateUser);
 router.delete("/:id", authMiddleware, deleteUser);
 

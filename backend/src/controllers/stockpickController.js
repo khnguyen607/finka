@@ -1,10 +1,11 @@
 const Stockpick = require("../models/stockpicks");
-const { Op } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 
 const getStockpicks = async (req, res) => {
   try {
     const stockpicks = await Stockpick.findAll({
       raw: true,
+      order: [["date", "DESC"]],
     });
     const formattedStockpicks = stockpicks.map((modal) => ({
       ...modal,
@@ -114,38 +115,100 @@ const deleteStockpick = async (req, res) => {
   }
 };
 
+// Orther Controller
+// const getStockpickDate = async (req, res) => {
+//   try {
+//     const { dateFrom, dateTo } = req.body;
+
+//     // Tạo điều kiện lọc
+//     let whereCondition = null;
+//     if (dateFrom && dateTo) {
+//       whereCondition = {
+//         date: {
+//           [Op.between]: [new Date(dateFrom), new Date(dateTo)],
+//         },
+//       };
+//     } else if (dateFrom) {
+//       whereCondition = {
+//         date: {
+//           [Op.gte]: new Date(dateFrom),
+//         },
+//       };
+//     } else if (dateTo) {
+//       whereCondition = {
+//         date: {
+//           [Op.lte]: new Date(dateTo),
+//         },
+//       };
+//     }
+
+//     // Truy vấn dữ liệu
+//     const stockpicks = await Stockpick.findAll({
+//       raw: true,
+//       where: whereCondition, // Nếu whereCondition là null, Sequelize sẽ bỏ qua điều kiện lọc.
+//     });
+
+//     const formattedStockpicks = stockpicks.map((modal) => ({
+//       ...modal,
+//     }));
+
+//     res.status(200).json({
+//       message: "Stockpicks retrieved successfully",
+//       data: formattedStockpicks,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 const getStockpickDate = async (req, res) => {
   try {
-    const { dateFrom, dateTo } = req.body;
+    const { dateFrom, dateTo, codes, sortBy } = req.body;
 
-    // Tạo điều kiện lọc
-    let whereCondition = null;
+    // Tạo điều kiện lọc cho ngày
+    let whereCondition = {};
+
     if (dateFrom && dateTo) {
-      whereCondition = {
-        date: {
-          [Op.between]: [new Date(dateFrom), new Date(dateTo)],
-        },
+      whereCondition.date = {
+        [Op.between]: [new Date(dateFrom), new Date(dateTo)],
       };
     } else if (dateFrom) {
-      whereCondition = {
-        date: {
-          [Op.gte]: new Date(dateFrom),
-        },
+      whereCondition.date = {
+        [Op.gte]: new Date(dateFrom),
       };
     } else if (dateTo) {
-      whereCondition = {
-        date: {
-          [Op.lte]: new Date(dateTo),
-        },
+      whereCondition.date = {
+        [Op.lte]: new Date(dateTo),
       };
+    }
+
+    // Thêm điều kiện lọc cho `codes`
+    if (codes && Array.isArray(codes) && codes.length > 0) {
+      whereCondition.code = {
+        [Op.in]: codes,
+      };
+    }
+
+    // Xử lý điều kiện sắp xếp
+    const orderCondition = [];
+    if (sortBy && Array.isArray(sortBy)) {
+      sortBy.forEach((item) => {
+        const [field, direction] = item.split(" ");
+        orderCondition.push([
+          field,
+          direction?.toUpperCase() === "DESC" ? "DESC" : "ASC",
+        ]);
+      });
     }
 
     // Truy vấn dữ liệu
     const stockpicks = await Stockpick.findAll({
       raw: true,
-      where: whereCondition, // Nếu whereCondition là null, Sequelize sẽ bỏ qua điều kiện lọc.
+      where: whereCondition,
+      order: orderCondition, // Áp dụng sắp xếp
     });
 
+    // Format lại dữ liệu nếu cần
     const formattedStockpicks = stockpicks.map((modal) => ({
       ...modal,
     }));
@@ -158,27 +221,6 @@ const getStockpickDate = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-// const createStockpickList = async (req, res) => {
-//   try {
-//     const stockpickList = req.body; // Danh sách dữ liệu từ request body (array)
-
-//     // Kiểm tra nếu không có dữ liệu hoặc dữ liệu không phải là mảng
-//     if (!Array.isArray(stockpickList) || stockpickList.length === 0) {
-//       return res.status(400).json({ message: "Invalid or empty data list" });
-//     }
-
-//     // Tạo danh sách dữ liệu mới
-//     const createdStockpicks = await Stockpick.bulkCreate(stockpickList);
-
-//     res.status(201).json({
-//       message: "Stockpick list created successfully",
-//       data: createdStockpicks,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 
 const createStockpickList = async (req, res) => {
   try {
@@ -225,6 +267,22 @@ const createStockpickList = async (req, res) => {
   }
 };
 
+const getDistinctCodes = async (req, res) => {
+  try {
+    const distinctCodes = await Stockpick.findAll({
+      attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("code")), "code"]],
+      raw: true,
+    });
+
+    res.status(200).json({
+      message: "Distinct codes retrieved successfully",
+      data: distinctCodes,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Xuất các hàm CRUD
 module.exports = {
   getStockpicks,
@@ -234,4 +292,5 @@ module.exports = {
   deleteStockpick,
   getStockpickDate,
   createStockpickList,
+  getDistinctCodes,
 };

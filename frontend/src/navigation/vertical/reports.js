@@ -5,6 +5,13 @@ export default [
     resource: "ACL",
   },
   {
+    title: "Cổ phiếu yêu thích",
+    icon: "SearchIcon",
+    route: "reports-rcm-liked-list",
+    action: "read",
+    resource: "ACL",
+  },
+  {
     title: "Khuyến nghị",
     icon: "SearchIcon",
     route: "reports-rcm-list",
@@ -25,8 +32,6 @@ export default [
       {
         title: "Danh sách mã cổ phiếu",
         route: "reports-stocks-list",
-        action: "read",
-        resource: "ACL",
       },
       {
         title: "Chi tiết phiên",

@@ -9,6 +9,15 @@ export default [
     },
   },
   {
+    path: "/reports/rcm-liked/list",
+    name: "reports-rcm-liked-list",
+    component: () => import("@/views/reports/rcm-liked/rcm-liked-list.vue"),
+    meta: {
+      resource: "ACL",
+      action: "read",
+    },
+  },
+  {
     path: "/reports/vnindex/list",
     name: "reports-vnindex-list",
     component: () => import("@/views/reports/vnindex/vnindex-list.vue"),

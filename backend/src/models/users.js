@@ -34,6 +34,10 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    codeLiked: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   },
   {
     tableName: "users",
