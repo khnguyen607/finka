@@ -9,7 +9,7 @@ const StockDetail = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
-    stockId: {
+    stockCode: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -64,7 +64,7 @@ const StockDetail = sequelize.define(
     indexes: [
       {
         unique: true,
-        fields: ["stockId", "date"],
+        fields: ["stockCode", "date"],
       },
     ],
   }

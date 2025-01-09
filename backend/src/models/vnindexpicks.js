@@ -12,14 +12,13 @@ const Vnindexpick = sequelize.define(
     date: {
       type: DataTypes.DATEONLY,
       allowNull: false,
-      unique: true,
     },
     point: {
       type: DataTypes.DECIMAL,
       allowNull: true,
     },
     pl: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL,
       allowNull: false,
     },
     rcm: {

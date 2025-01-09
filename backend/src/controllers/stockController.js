@@ -1,4 +1,5 @@
 const Stock = require("../models/stocks");
+const { Sequelize, Op } = require("sequelize");
 
 const getStocks = async (req, res) => {
   try {
@@ -99,6 +100,27 @@ const deleteStock = async (req, res) => {
   }
 };
 
+// Order Controller
+const getDistinctCodes = async (req, res) => {
+  try {
+    const distinctCodes = await Stock.findAll({
+      attributes: [
+        [Sequelize.fn("DISTINCT", Sequelize.col("code")), "code"],
+        [Sequelize.fn("MIN", Sequelize.col("field")), "field"],
+      ],
+      group: ["code"],
+      raw: true,
+    });
+
+    res.status(200).json({
+      message: "Distinct codes retrieved successfully",
+      data: distinctCodes,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Xuất các hàm CRUD
 module.exports = {
   getStocks,
@@ -106,4 +128,5 @@ module.exports = {
   createStock,
   updateStock,
   deleteStock,
+  getDistinctCodes,
 };

@@ -202,7 +202,7 @@ export default {
       type: Number,
       default: null,
     },
-    stockId: {
+    stockCode: {
       type: Number,
       required: true,
     },
@@ -210,7 +210,7 @@ export default {
   data() {
     return {
       dataForm: {
-        stockId: this.stockId,
+        stockCode: this.stockCode,
         date: null,
         price: null,
         pl: null,
@@ -304,7 +304,7 @@ export default {
           this.dataImport = translateFields(await excelToJson(file));
           console.log(this.dataImport);
           await this.$callApi.post("/api/stockDetails/createList", {
-            stockDetailList: { stockId: this.stockId, ...this.dataImport },
+            stockDetailList: { stockCode: this.stockCode, ...this.dataImport },
             overwrite: false,
           });
           this.$toast({
@@ -339,7 +339,7 @@ export default {
     async handleOverwrite() {
       await this.$callApi.post("/api/stockDetails/createList", {
         stockDetailList: {
-          stockId: this.stockId,
+          stockCode: this.stockCode,
           ...this.dataImport,
         },
         overwrite: true,

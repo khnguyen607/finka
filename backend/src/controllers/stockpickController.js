@@ -116,51 +116,6 @@ const deleteStockpick = async (req, res) => {
 };
 
 // Orther Controller
-// const getStockpickDate = async (req, res) => {
-//   try {
-//     const { dateFrom, dateTo } = req.body;
-
-//     // Tạo điều kiện lọc
-//     let whereCondition = null;
-//     if (dateFrom && dateTo) {
-//       whereCondition = {
-//         date: {
-//           [Op.between]: [new Date(dateFrom), new Date(dateTo)],
-//         },
-//       };
-//     } else if (dateFrom) {
-//       whereCondition = {
-//         date: {
-//           [Op.gte]: new Date(dateFrom),
-//         },
-//       };
-//     } else if (dateTo) {
-//       whereCondition = {
-//         date: {
-//           [Op.lte]: new Date(dateTo),
-//         },
-//       };
-//     }
-
-//     // Truy vấn dữ liệu
-//     const stockpicks = await Stockpick.findAll({
-//       raw: true,
-//       where: whereCondition, // Nếu whereCondition là null, Sequelize sẽ bỏ qua điều kiện lọc.
-//     });
-
-//     const formattedStockpicks = stockpicks.map((modal) => ({
-//       ...modal,
-//     }));
-
-//     res.status(200).json({
-//       message: "Stockpicks retrieved successfully",
-//       data: formattedStockpicks,
-//     });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
 const getStockpickDate = async (req, res) => {
   try {
     const { dateFrom, dateTo, codes, sortBy } = req.body;

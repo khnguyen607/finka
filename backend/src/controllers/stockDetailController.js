@@ -40,7 +40,7 @@ const getStockDetailById = async (req, res) => {
 const createStockDetail = async (req, res) => {
   try {
     const {
-      stockId,
+      stockCode,
       date,
       price,
       pl,
@@ -56,7 +56,7 @@ const createStockDetail = async (req, res) => {
 
     // Tạo người dùng mới
     const modal = await StockDetail.create({
-      stockId,
+      stockCode,
       date,
       price,
       pl,
@@ -83,7 +83,7 @@ const updateStockDetail = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      stockId,
+      stockCode,
       date,
       price,
       pl,
@@ -104,7 +104,7 @@ const updateStockDetail = async (req, res) => {
 
     // Cập nhật thông tin người dùng
     await modal.update({
-      stockId,
+      stockCode,
       date,
       price,
       pl,
@@ -141,12 +141,13 @@ const deleteStockDetail = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 const getStockDetailDate = async (req, res) => {
   try {
-    const { stockId, dateFrom, dateTo } = req.body;
+    const { stockCode, dateFrom, dateTo } = req.body;
 
     // Tạo điều kiện lọc
-    let whereCondition = { stockId }; // Khởi tạo điều kiện với stockId
+    let whereCondition = { stockCode }; // Khởi tạo điều kiện với stockCode
 
     if (dateFrom && dateTo) {
       whereCondition.date = {

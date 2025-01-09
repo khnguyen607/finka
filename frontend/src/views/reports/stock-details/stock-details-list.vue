@@ -6,80 +6,56 @@
       </b-card-header>
       <b-card-body>
         <b-row>
-          <b-col sm="6">
-            <b-form-group label="Từ ngày" label-for="mc-date-from">
-              <b-form-datepicker
-                v-model="searchData.dateFrom"
-                id="mc-date-from"
-                placeholder="Chọn từ ngày"
-              />
-            </b-form-group>
-          </b-col>
-          <b-col sm="6">
-            <b-form-group label="Đến ngày" label-for="mc-date-to">
-              <b-form-datepicker
-                v-model="searchData.dateTo"
-                id="mc-date-to"
-                placeholder="Đến ngày"
-              />
-            </b-form-group>
-          </b-col>
-
-          <b-col md="4">
-            <b-form-group label="Mã cổ phiếu" label-for="mc-stockId">
+          <b-col md="6">
+            <b-form-group label="Mã cổ phiếu" label-for="mc-stockCode">
               <v-select
-                v-model="searchData.stockId"
-                id="mc-stockId"
+                v-model="searchData.stockCode"
+                id="mc-stockCode"
                 :options="options.stocks"
-                :reduce="(option) => option.id"
                 placeholder="Chọn mã cổ phiếu"
                 :clearable="false"
                 @input="onStockChange"
               />
             </b-form-group>
           </b-col>
-          <b-col md="4" sm="6">
+          <b-col md="6">
             <b-form-group label="Ngành" label-for="mc-field">
               <b-form-input
                 v-model="searchData.field"
                 id="mc-field"
                 type="text"
                 placeholder="Không có dữ liệu"
-                readonly
+                disabled
               />
             </b-form-group>
           </b-col>
-          <b-col md="4" sm="6">
+          <b-col md="6">
+            <b-form-group label="Quý" label-for="mc-quarter">
+              <v-select
+                v-model="searchData.quarter"
+                id="mc-quarter"
+                :options="options.stocks"
+                placeholder="Chọn quý"
+                :clearable="false"
+                :disabled="searchData.field == null"
+              />
+            </b-form-group>
+          </b-col>
+          <b-col md="6">
             <b-form-group label="Xếp hạng BCTC" label-for="mc-financialRank">
               <b-form-input
                 v-model="searchData.financialRank"
                 id="mc-financialRank"
                 type="text"
                 placeholder="Không có dữ liệu"
-                readonly
+                disabled
               />
             </b-form-group>
           </b-col>
-          <!-- <b-col md="3" sm="6">
-            <b-form-group label="Quý" label-for="mc-quarter">
-              <b-form-input
-                v-model="searchData.quarter"
-                id="mc-quarter"
-                type="text"
-                placeholder="Không có dữ liệu"
-                readonly
-              />
-            </b-form-group>
-          </b-col> -->
 
           <!-- submit and reset -->
           <b-col class="d-flex justify-content-center">
-            <b-button
-              type="submit"
-              variant="primary"
-              class="mr-1"
-              @click="getData"
-            >
+            <b-button type="submit" variant="primary" class="mr-1">
               Tra cứu
             </b-button>
           </b-col>
@@ -113,6 +89,28 @@
         </div>
       </b-card-header>
       <b-card-body>
+        <b-row>
+          <b-col sm="6">
+            <b-form-group label="Từ ngày" label-for="mc-date-from">
+              <b-form-datepicker
+                v-model="searchData.dateFrom"
+                id="mc-date-from"
+                placeholder="Chọn từ ngày"
+                @input="getData"
+              />
+            </b-form-group>
+          </b-col>
+          <b-col sm="6">
+            <b-form-group label="Đến ngày" label-for="mc-date-to">
+              <b-form-datepicker
+                v-model="searchData.dateTo"
+                id="mc-date-to"
+                placeholder="Đến ngày"
+                @input="getData"
+              />
+            </b-form-group>
+          </b-col>
+        </b-row>
         <div>
           <!-- table -->
           <vue-good-table
@@ -214,7 +212,7 @@
       <StockDetailCreateOrEdit
         :edit="edit"
         :id="id"
-        :stockId="searchData.stockId"
+        :stockCode="searchData.stockCode"
         @submitted="
           getData();
           showModal = false;
@@ -276,7 +274,7 @@ export default {
     return {
       userData: JSON.parse(localStorage.getItem("userData")),
       searchData: {
-        stockId: null,
+        stockCode: null,
         field: null,
         financialRank: null,
         quarter: null,
@@ -292,10 +290,6 @@ export default {
         {
           label: "Ngày báo cáo",
           field: "date",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-          },
           formatFn: (value) => {
             if (!value) return "";
             const date = new Date(value);
@@ -442,36 +436,36 @@ export default {
     await this.getData();
   },
   methods: {
-    onStockChange(stockId) {
-      this.$router.push(`/reports/stock-details/list/${stockId}`);
+    onStockChange(stockCode) {
+      this.searchData.field = stockCode.value;
+      this.$router.push(`/reports/stock-details/list/${stockCode.label}`);
       this.getData();
     },
     async getStocks() {
-      await this.$callApi.get("/api/stocks").then((res) => {
+      await this.$callApi.get("/api/stocks/codes").then((res) => {
         const data = res.data.data;
         data.forEach((item) => {
           this.options.stocks.push({
-            id: item.id,
-            value: item.id,
-            label: `${item.code} - ${item.quarter}`,
+            value: item.field,
+            label: item.code,
           });
         });
       });
     },
     async getData() {
-      await this.$callApi
-        .get("/api/stocks/" + this.$route.params.id)
-        .then((res) => {
-          const data = res.data.data;
-          this.searchData.stockId = data.id;
-          this.searchData.field = data.field;
-          this.searchData.financialRank = data.financialRank;
-          this.searchData.quarter = data.quarter;
-        });
+      // await this.$callApi
+      //   .get("/api/stocks/" + this.$route.params.id)
+      //   .then((res) => {
+      //     const data = res.data.data;
+      //     this.searchData.stockCode = data.id;
+      //     this.searchData.field = data.field;
+      //     this.searchData.financialRank = data.financialRank;
+      //     this.searchData.quarter = data.quarter;
+      //   });
 
       await this.$callApi
         .post("/api/stockDetails/date", {
-          stockId: this.$route.params.id,
+          stockCode: this.$route.params.id,
           dateFrom: this.searchData.dateFrom,
           dateTo: this.searchData.dateTo,
         })
