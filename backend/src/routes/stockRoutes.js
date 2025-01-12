@@ -1,22 +1,24 @@
 const express = require("express");
 const {
-  getStocks,
-  getStockById,
-  createStock,
-  updateStock,
-  deleteStock,
+  getModals,
+  getModalById,
+  createModal,
+  updateModal,
+  deleteModal,
   getDistinctCodes,
+  deleteList,
 } = require("../controllers/stockController");
 const authMiddleware = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
 // Định nghĩa các endpoint
-router.get("/", authMiddleware, getStocks);
+router.get("/", authMiddleware, getModals);
 router.get("/codes", authMiddleware, getDistinctCodes);
-router.get("/:id", authMiddleware, getStockById);
-router.post("/", authMiddleware, createStock);
-router.put("/:id", authMiddleware, updateStock);
-router.delete("/:id", authMiddleware, deleteStock);
+router.get("/:id", authMiddleware, getModalById);
+router.post("/", authMiddleware, createModal);
+router.post("/deleteList", authMiddleware, deleteList);
+router.put("/:id", authMiddleware, updateModal);
+router.delete("/:id", authMiddleware, deleteModal);
 
 module.exports = router;

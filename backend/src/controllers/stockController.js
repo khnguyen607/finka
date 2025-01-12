@@ -1,35 +1,35 @@
-const Stock = require("../models/stocks");
+const Modal = require("../models/stocks");
 const { Sequelize, Op } = require("sequelize");
 
-const getStocks = async (req, res) => {
+const getModals = async (req, res) => {
   try {
-    const stocks = await Stock.findAll({
+    const stocks = await Modal.findAll({
       raw: true,
     });
-    const formattedStocks = stocks.map((modal) => ({
+    const formattedModals = stocks.map((modal) => ({
       ...modal,
     }));
     res.status(200).json({
-      message: "Stocks retrieved successfully",
-      data: formattedStocks,
+      message: "Modals retrieved successfully",
+      data: formattedModals,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const getStockById = async (req, res) => {
+const getModalById = async (req, res) => {
   try {
     const { id } = req.params;
-    const modal = await Stock.findByPk(id); // Tìm người dùng theo ID (Primary Key)
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID (Primary Key)
 
     if (!modal) {
-      return res.status(404).json({ error: "Stock not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     modal.password = null;
     res.status(200).json({
-      message: "Stock retrieved successfully",
+      message: "Modal retrieved successfully",
       data: modal,
     });
   } catch (error) {
@@ -37,12 +37,12 @@ const getStockById = async (req, res) => {
   }
 };
 
-const createStock = async (req, res) => {
+const createModal = async (req, res) => {
   try {
     const { code, field, financialRank, quarter } = req.body;
 
     // Tạo người dùng mới
-    const modal = await Stock.create({
+    const modal = await Modal.create({
       code,
       field,
       financialRank,
@@ -50,7 +50,7 @@ const createStock = async (req, res) => {
     });
 
     res.status(201).json({
-      message: "Stock created successfully",
+      message: "Modal created successfully",
       data: modal,
     });
   } catch (error) {
@@ -58,14 +58,14 @@ const createStock = async (req, res) => {
   }
 };
 
-const updateStock = async (req, res) => {
+const updateModal = async (req, res) => {
   try {
     const { id } = req.params;
     const { code, field, financialRank, quarter } = req.body;
 
-    const modal = await Stock.findByPk(id); // Tìm người dùng theo ID
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
-      return res.status(404).json({ error: "Stock not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     // Cập nhật thông tin người dùng
@@ -76,7 +76,7 @@ const updateStock = async (req, res) => {
       quarter,
     });
     res.status(200).json({
-      message: "Stock updated successfully",
+      message: "Modal updated successfully",
       data: modal,
     });
   } catch (error) {
@@ -84,13 +84,13 @@ const updateStock = async (req, res) => {
   }
 };
 
-const deleteStock = async (req, res) => {
+const deleteModal = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const modal = await Stock.findByPk(id); // Tìm người dùng theo ID
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
-      return res.status(404).json({ error: "Stock not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     await modal.destroy(); // Xóa người dùng
@@ -103,7 +103,7 @@ const deleteStock = async (req, res) => {
 // Order Controller
 const getDistinctCodes = async (req, res) => {
   try {
-    const distinctCodes = await Stock.findAll({
+    const distinctCodes = await Modal.findAll({
       attributes: [
         [Sequelize.fn("DISTINCT", Sequelize.col("code")), "code"],
         [Sequelize.fn("MIN", Sequelize.col("field")), "field"],
@@ -121,12 +121,42 @@ const getDistinctCodes = async (req, res) => {
   }
 };
 
+const deleteList = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    // Kiểm tra input
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Danh sách ID không hợp lệ." });
+    }
+
+    // Xóa bản ghi theo danh sách ID
+    const deleteCount = await Modal.destroy({
+      where: { id: ids },
+    });
+
+    if (deleteCount === 0) {
+      return res.status(404).json({
+        message: "Không tìm thấy bản ghi nào để xóa.",
+      });
+    }
+
+    res.status(200).json({
+      message: "Xóa thành công.",
+      deleteCount, // Số lượng bản ghi được xóa
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Xuất các hàm CRUD
 module.exports = {
-  getStocks,
-  getStockById,
-  createStock,
-  updateStock,
-  deleteStock,
+  getModals,
+  getModalById,
+  createModal,
+  updateModal,
+  deleteModal,
   getDistinctCodes,
+  deleteList,
 };

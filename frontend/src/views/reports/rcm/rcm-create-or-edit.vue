@@ -208,7 +208,7 @@ export default {
         roe: null,
       },
       fieldMapping: {
-        "Ngày báo cáo": "date",
+        "Ngày": "date",
         "Mã CK": "code",
         Ngành: "field",
         "Thị giá": "price",

@@ -288,7 +288,7 @@ export default {
       pageLength: 10,
       columns: [
         {
-          label: "Ngày báo cáo",
+          label: "Ngày",
           field: "date",
           formatFn: (value) => {
             if (!value) return "";

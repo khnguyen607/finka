@@ -1,35 +1,35 @@
-const Vnindexpick = require("../models/vnindexpicks");
+const Modal = require("../models/vnindexpicks");
 const { Op } = require("sequelize");
 
-const getVnindexpicks = async (req, res) => {
+const getModals = async (req, res) => {
   try {
-    const vnindexpicks = await Vnindexpick.findAll({
+    const vnindexpicks = await Modal.findAll({
       raw: true,
     });
-    const formattedVnindexpicks = vnindexpicks.map((modal) => ({
+    const formattedModals = vnindexpicks.map((modal) => ({
       ...modal,
     }));
     res.status(200).json({
-      message: "Vnindexpicks retrieved successfully",
-      data: formattedVnindexpicks,
+      message: "Modals retrieved successfully",
+      data: formattedModals,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const getVnindexpickById = async (req, res) => {
+const getModalById = async (req, res) => {
   try {
     const { id } = req.params;
-    const modal = await Vnindexpick.findByPk(id); // Tìm người dùng theo ID (Primary Key)
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID (Primary Key)
 
     if (!modal) {
-      return res.status(404).json({ error: "Vnindexpick not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     modal.password = null;
     res.status(200).json({
-      message: "Vnindexpick retrieved successfully",
+      message: "Modal retrieved successfully",
       data: modal,
     });
   } catch (error) {
@@ -37,13 +37,13 @@ const getVnindexpickById = async (req, res) => {
   }
 };
 
-const createVnindexpick = async (req, res) => {
+const createModal = async (req, res) => {
   try {
     const { date, point, pl, rcm, bsRate, riskVnindex, riskMacro, pe, pb } =
       req.body;
 
     // Tạo người dùng mới
-    const modal = await Vnindexpick.create({
+    const modal = await Modal.create({
       date,
       point,
       pl,
@@ -56,7 +56,7 @@ const createVnindexpick = async (req, res) => {
     });
 
     res.status(201).json({
-      message: "Vnindexpick created successfully",
+      message: "Modal created successfully",
       data: modal,
     });
   } catch (error) {
@@ -64,15 +64,15 @@ const createVnindexpick = async (req, res) => {
   }
 };
 
-const updateVnindexpick = async (req, res) => {
+const updateModal = async (req, res) => {
   try {
     const { id } = req.params;
     const { date, point, pl, rcm, bsRate, riskVnindex, riskMacro, pe, pb } =
       req.body;
 
-    const modal = await Vnindexpick.findByPk(id); // Tìm người dùng theo ID
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
-      return res.status(404).json({ error: "Vnindexpick not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     // Cập nhật thông tin người dùng
@@ -88,7 +88,7 @@ const updateVnindexpick = async (req, res) => {
       pb,
     });
     res.status(200).json({
-      message: "Vnindexpick updated successfully",
+      message: "Modal updated successfully",
       data: modal,
     });
   } catch (error) {
@@ -96,13 +96,13 @@ const updateVnindexpick = async (req, res) => {
   }
 };
 
-const deleteVnindexpick = async (req, res) => {
+const deleteModal = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const modal = await Vnindexpick.findByPk(id); // Tìm người dùng theo ID
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
-      return res.status(404).json({ error: "Vnindexpick not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     await modal.destroy(); // Xóa người dùng
@@ -112,7 +112,7 @@ const deleteVnindexpick = async (req, res) => {
   }
 };
 
-const getVnindexpickDate = async (req, res) => {
+const getModalDate = async (req, res) => {
   try {
     const { dateFrom, dateTo } = req.body;
 
@@ -139,25 +139,25 @@ const getVnindexpickDate = async (req, res) => {
     }
 
     // Truy vấn dữ liệu
-    const vnindexpicks = await Vnindexpick.findAll({
+    const vnindexpicks = await Modal.findAll({
       raw: true,
       where: whereCondition, // Nếu whereCondition là null, Sequelize sẽ bỏ qua điều kiện lọc.
     });
 
-    const formattedVnindexpicks = vnindexpicks.map((modal) => ({
+    const formattedModals = vnindexpicks.map((modal) => ({
       ...modal,
     }));
 
     res.status(200).json({
-      message: "Vnindexpicks retrieved successfully",
-      data: formattedVnindexpicks,
+      message: "Modals retrieved successfully",
+      data: formattedModals,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const createVnindexpickList = async (req, res) => {
+const createModalList = async (req, res) => {
   try {
     const { data, overwrite } = req.body; // Lấy danh sách dữ liệu và cờ ghi đè từ request body
 
@@ -183,13 +183,13 @@ const createVnindexpickList = async (req, res) => {
       : {};
 
     // Thêm dữ liệu mới hoặc cập nhật nếu cần
-    const createdVnindexpicks = await Vnindexpick.bulkCreate(data, options);
+    const createdModals = await Modal.bulkCreate(data, options);
 
     res.status(201).json({
       message: overwrite
-        ? "Vnindexpick list created/updated successfully"
-        : "Vnindexpick list created successfully",
-      data: createdVnindexpicks,
+        ? "Modal list created/updated successfully"
+        : "Modal list created successfully",
+      data: createdModals,
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
@@ -199,13 +199,43 @@ const createVnindexpickList = async (req, res) => {
   }
 };
 
+const deleteList = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    // Kiểm tra input
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Danh sách ID không hợp lệ." });
+    }
+
+    // Xóa bản ghi theo danh sách ID
+    const deleteCount = await Modal.destroy({
+      where: { id: ids },
+    });
+
+    if (deleteCount === 0) {
+      return res.status(404).json({
+        message: "Không tìm thấy bản ghi nào để xóa.",
+      });
+    }
+
+    res.status(200).json({
+      message: "Xóa thành công.",
+      deleteCount, // Số lượng bản ghi được xóa
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Xuất các hàm CRUD
 module.exports = {
-  getVnindexpicks,
-  getVnindexpickById,
-  createVnindexpick,
-  updateVnindexpick,
-  deleteVnindexpick,
-  getVnindexpickDate,
-  createVnindexpickList,
+  getModals,
+  getModalById,
+  createModal,
+  updateModal,
+  deleteModal,
+  getModalDate,
+  createModalList,
+  deleteList,
 };

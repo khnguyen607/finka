@@ -1,36 +1,36 @@
-const Stockpick = require("../models/stockpicks");
+const Modal = require("../models/stockpicks");
 const { Sequelize, Op } = require("sequelize");
 
-const getStockpicks = async (req, res) => {
+const getModals = async (req, res) => {
   try {
-    const stockpicks = await Stockpick.findAll({
+    const stockpicks = await Modal.findAll({
       raw: true,
       order: [["date", "DESC"]],
     });
-    const formattedStockpicks = stockpicks.map((modal) => ({
+    const formattedModals = stockpicks.map((modal) => ({
       ...modal,
     }));
     res.status(200).json({
-      message: "Stockpicks retrieved successfully",
-      data: formattedStockpicks,
+      message: "Modals retrieved successfully",
+      data: formattedModals,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const getStockpickById = async (req, res) => {
+const getModalById = async (req, res) => {
   try {
     const { id } = req.params;
-    const modal = await Stockpick.findByPk(id); // Tìm người dùng theo ID (Primary Key)
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID (Primary Key)
 
     if (!modal) {
-      return res.status(404).json({ error: "Stockpick not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     modal.password = null;
     res.status(200).json({
-      message: "Stockpick retrieved successfully",
+      message: "Modal retrieved successfully",
       data: modal,
     });
   } catch (error) {
@@ -38,13 +38,13 @@ const getStockpickById = async (req, res) => {
   }
 };
 
-const createStockpick = async (req, res) => {
+const createModal = async (req, res) => {
   try {
     const { date, code, field, price, rcm, bsRate, bsCycle, pte, ptb, roe } =
       req.body;
 
     // Tạo người dùng mới
-    const modal = await Stockpick.create({
+    const modal = await Modal.create({
       date,
       code,
       field,
@@ -58,7 +58,7 @@ const createStockpick = async (req, res) => {
     });
 
     res.status(201).json({
-      message: "Stockpick created successfully",
+      message: "Modal created successfully",
       data: modal,
     });
   } catch (error) {
@@ -66,15 +66,15 @@ const createStockpick = async (req, res) => {
   }
 };
 
-const updateStockpick = async (req, res) => {
+const updateModal = async (req, res) => {
   try {
     const { id } = req.params;
     const { date, code, field, price, rcm, bsRate, bsCycle, pte, ptb, roe } =
       req.body;
 
-    const modal = await Stockpick.findByPk(id); // Tìm người dùng theo ID
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
-      return res.status(404).json({ error: "Stockpick not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     // Cập nhật thông tin người dùng
@@ -91,7 +91,7 @@ const updateStockpick = async (req, res) => {
       roe,
     });
     res.status(200).json({
-      message: "Stockpick updated successfully",
+      message: "Modal updated successfully",
       data: modal,
     });
   } catch (error) {
@@ -99,13 +99,13 @@ const updateStockpick = async (req, res) => {
   }
 };
 
-const deleteStockpick = async (req, res) => {
+const deleteModal = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const modal = await Stockpick.findByPk(id); // Tìm người dùng theo ID
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
-      return res.status(404).json({ error: "Stockpick not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     await modal.destroy(); // Xóa người dùng
@@ -116,7 +116,7 @@ const deleteStockpick = async (req, res) => {
 };
 
 // Orther Controller
-const getStockpickDate = async (req, res) => {
+const getModalDate = async (req, res) => {
   try {
     const { dateFrom, dateTo, codes, sortBy } = req.body;
 
@@ -157,27 +157,27 @@ const getStockpickDate = async (req, res) => {
     }
 
     // Truy vấn dữ liệu
-    const stockpicks = await Stockpick.findAll({
+    const stockpicks = await Modal.findAll({
       raw: true,
       where: whereCondition,
       order: orderCondition, // Áp dụng sắp xếp
     });
 
     // Format lại dữ liệu nếu cần
-    const formattedStockpicks = stockpicks.map((modal) => ({
+    const formattedModals = stockpicks.map((modal) => ({
       ...modal,
     }));
 
     res.status(200).json({
-      message: "Stockpicks retrieved successfully",
-      data: formattedStockpicks,
+      message: "Modals retrieved successfully",
+      data: formattedModals,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const createStockpickList = async (req, res) => {
+const createModalList = async (req, res) => {
   try {
     const { stockpickList, overwrite } = req.body; // Lấy danh sách dữ liệu và cờ ghi đè từ request body
 
@@ -203,16 +203,13 @@ const createStockpickList = async (req, res) => {
       : {};
 
     // Thêm dữ liệu mới hoặc cập nhật nếu cần
-    const createdStockpicks = await Stockpick.bulkCreate(
-      stockpickList,
-      options
-    );
+    const createdModals = await Modal.bulkCreate(stockpickList, options);
 
     res.status(201).json({
       message: overwrite
-        ? "Stockpick list created/updated successfully"
-        : "Stockpick list created successfully",
-      data: createdStockpicks,
+        ? "Modal list created/updated successfully"
+        : "Modal list created successfully",
+      data: createdModals,
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
@@ -224,7 +221,7 @@ const createStockpickList = async (req, res) => {
 
 const getDistinctCodes = async (req, res) => {
   try {
-    const distinctCodes = await Stockpick.findAll({
+    const distinctCodes = await Modal.findAll({
       attributes: [[Sequelize.fn("DISTINCT", Sequelize.col("code")), "code"]],
       raw: true,
     });
@@ -238,14 +235,44 @@ const getDistinctCodes = async (req, res) => {
   }
 };
 
+const deleteList = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    // Kiểm tra input
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Danh sách ID không hợp lệ." });
+    }
+
+    // Xóa bản ghi theo danh sách ID
+    const deleteCount = await Modal.destroy({
+      where: { id: ids },
+    });
+
+    if (deleteCount === 0) {
+      return res.status(404).json({
+        message: "Không tìm thấy bản ghi nào để xóa.",
+      });
+    }
+
+    res.status(200).json({
+      message: "Xóa thành công.",
+      deleteCount, // Số lượng bản ghi được xóa
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Xuất các hàm CRUD
 module.exports = {
-  getStockpicks,
-  getStockpickById,
-  createStockpick,
-  updateStockpick,
-  deleteStockpick,
-  getStockpickDate,
-  createStockpickList,
+  getModals,
+  getModalById,
+  createModal,
+  updateModal,
+  deleteModal,
+  getModalDate,
+  createModalList,
   getDistinctCodes,
+  deleteList,
 };

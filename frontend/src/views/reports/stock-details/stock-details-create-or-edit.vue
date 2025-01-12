@@ -224,7 +224,7 @@ export default {
         techSignal: null,
       },
       fieldMapping: {
-        "Ngày báo cáo": "date",
+        "Ngày": "date",
         "Thị giá": "price",
         "P&L hiện tại": "pl",
         "Lệnh mua/bán": "rcm",

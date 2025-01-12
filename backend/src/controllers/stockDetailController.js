@@ -1,35 +1,35 @@
-const StockDetail = require("../models/stockDetails");
+const Modal = require("../models/stockDetails");
 const { Op } = require("sequelize");
 
-const getStockDetails = async (req, res) => {
+const getModals = async (req, res) => {
   try {
-    const stockpicks = await StockDetail.findAll({
+    const stockpicks = await Modal.findAll({
       raw: true,
     });
-    const formattedStockDetails = stockpicks.map((modal) => ({
+    const formattedModals = stockpicks.map((modal) => ({
       ...modal,
     }));
     res.status(200).json({
-      message: "StockDetails retrieved successfully",
-      data: formattedStockDetails,
+      message: "Modals retrieved successfully",
+      data: formattedModals,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const getStockDetailById = async (req, res) => {
+const getModalById = async (req, res) => {
   try {
     const { id } = req.params;
-    const modal = await StockDetail.findByPk(id); // Tìm người dùng theo ID (Primary Key)
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID (Primary Key)
 
     if (!modal) {
-      return res.status(404).json({ error: "StockDetail not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     modal.password = null;
     res.status(200).json({
-      message: "StockDetail retrieved successfully",
+      message: "Modal retrieved successfully",
       data: modal,
     });
   } catch (error) {
@@ -37,7 +37,7 @@ const getStockDetailById = async (req, res) => {
   }
 };
 
-const createStockDetail = async (req, res) => {
+const createModal = async (req, res) => {
   try {
     const {
       stockCode,
@@ -55,7 +55,7 @@ const createStockDetail = async (req, res) => {
     } = req.body;
 
     // Tạo người dùng mới
-    const modal = await StockDetail.create({
+    const modal = await Modal.create({
       stockCode,
       date,
       price,
@@ -71,7 +71,7 @@ const createStockDetail = async (req, res) => {
     });
 
     res.status(201).json({
-      message: "StockDetail created successfully",
+      message: "Modal created successfully",
       data: modal,
     });
   } catch (error) {
@@ -79,7 +79,7 @@ const createStockDetail = async (req, res) => {
   }
 };
 
-const updateStockDetail = async (req, res) => {
+const updateModal = async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -97,9 +97,9 @@ const updateStockDetail = async (req, res) => {
       techSignal,
     } = req.body;
 
-    const modal = await StockDetail.findByPk(id); // Tìm người dùng theo ID
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
-      return res.status(404).json({ error: "StockDetail not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     // Cập nhật thông tin người dùng
@@ -118,7 +118,7 @@ const updateStockDetail = async (req, res) => {
       techSignal,
     });
     res.status(200).json({
-      message: "StockDetail updated successfully",
+      message: "Modal updated successfully",
       data: modal,
     });
   } catch (error) {
@@ -126,13 +126,13 @@ const updateStockDetail = async (req, res) => {
   }
 };
 
-const deleteStockDetail = async (req, res) => {
+const deleteModal = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const modal = await StockDetail.findByPk(id); // Tìm người dùng theo ID
+    const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
-      return res.status(404).json({ error: "StockDetail not found" });
+      return res.status(404).json({ error: "Modal not found" });
     }
 
     await modal.destroy(); // Xóa người dùng
@@ -142,7 +142,7 @@ const deleteStockDetail = async (req, res) => {
   }
 };
 
-const getStockDetailDate = async (req, res) => {
+const getModalDate = async (req, res) => {
   try {
     const { stockCode, dateFrom, dateTo } = req.body;
 
@@ -164,25 +164,25 @@ const getStockDetailDate = async (req, res) => {
     }
 
     // Truy vấn dữ liệu
-    const stockpicks = await StockDetail.findAll({
+    const stockpicks = await Modal.findAll({
       raw: true,
       where: whereCondition, // Nếu whereCondition là null, Sequelize sẽ bỏ qua điều kiện lọc.
     });
 
-    const formattedStockDetails = stockpicks.map((modal) => ({
+    const formattedModals = stockpicks.map((modal) => ({
       ...modal,
     }));
 
     res.status(200).json({
-      message: "StockDetails retrieved successfully",
-      data: formattedStockDetails,
+      message: "Modals retrieved successfully",
+      data: formattedModals,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const createStockDetailList = async (req, res) => {
+const createModalList = async (req, res) => {
   try {
     const { stockpickList, overwrite } = req.body; // Lấy danh sách dữ liệu và cờ ghi đè từ request body
 
@@ -210,16 +210,16 @@ const createStockDetailList = async (req, res) => {
       : {};
 
     // Thêm dữ liệu mới hoặc cập nhật nếu cần
-    const createdStockDetails = await StockDetail.bulkCreate(
+    const createdModals = await Modal.bulkCreate(
       stockpickList,
       options
     );
 
     res.status(201).json({
       message: overwrite
-        ? "StockDetail list created/updated successfully"
-        : "StockDetail list created successfully",
-      data: createdStockDetails,
+        ? "Modal list created/updated successfully"
+        : "Modal list created successfully",
+      data: createdModals,
     });
   } catch (error) {
     if (error.name === "SequelizeUniqueConstraintError") {
@@ -229,13 +229,43 @@ const createStockDetailList = async (req, res) => {
   }
 };
 
+const deleteList = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    // Kiểm tra input
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: "Danh sách ID không hợp lệ." });
+    }
+
+    // Xóa bản ghi theo danh sách ID
+    const deleteCount = await Modal.destroy({
+      where: { id: ids },
+    });
+
+    if (deleteCount === 0) {
+      return res.status(404).json({
+        message: "Không tìm thấy bản ghi nào để xóa.",
+      });
+    }
+
+    res.status(200).json({
+      message: "Xóa thành công.",
+      deleteCount, // Số lượng bản ghi được xóa
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Xuất các hàm CRUD
 module.exports = {
-  getStockDetails,
-  getStockDetailById,
-  createStockDetail,
-  updateStockDetail,
-  deleteStockDetail,
-  getStockDetailDate,
-  createStockDetailList,
+  getModals,
+  getModalById,
+  createModal,
+  updateModal,
+  deleteModal,
+  getModalDate,
+  createModalList,
+  deleteList,
 };
