@@ -9,6 +9,10 @@ const Stock = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
+    date: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
     code: {
       type: DataTypes.STRING,
       allowNull: false,

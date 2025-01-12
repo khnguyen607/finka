@@ -498,7 +498,7 @@ export default {
           item.income
         );
         this.charts.totalIncomeByTeamDaily.data.categories.push(
-          item.date.split("T")[0].split("-")[2]
+          item.date.split(" ")[0].split("-")[2]
         );
       });
       this.charts.totalIncomeByTeamDaily.key += 1;

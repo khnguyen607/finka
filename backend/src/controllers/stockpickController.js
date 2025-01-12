@@ -179,10 +179,10 @@ const getModalDate = async (req, res) => {
 
 const createModalList = async (req, res) => {
   try {
-    const { stockpickList, overwrite } = req.body; // Lấy danh sách dữ liệu và cờ ghi đè từ request body
+    const { dataList, overwrite } = req.body; // Lấy danh sách dữ liệu và cờ ghi đè từ request body
 
     // Kiểm tra nếu không có dữ liệu hoặc dữ liệu không phải là mảng
-    if (!Array.isArray(stockpickList) || stockpickList.length === 0) {
+    if (!Array.isArray(dataList) || dataList.length === 0) {
       return res.status(400).json({ message: "Invalid or empty data list" });
     }
 
@@ -203,7 +203,7 @@ const createModalList = async (req, res) => {
       : {};
 
     // Thêm dữ liệu mới hoặc cập nhật nếu cần
-    const createdModals = await Modal.bulkCreate(stockpickList, options);
+    const createdModals = await Modal.bulkCreate(dataList, options);
 
     res.status(201).json({
       message: overwrite

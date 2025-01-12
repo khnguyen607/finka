@@ -196,15 +196,15 @@ export default {
         pb: null,
       },
       fieldMapping: {
-        "Ngày": "date",
-        "Điểm": "point",
+        Ngày: "date",
+        Điểm: "point",
         "P&L": "pl",
         "Lệnh mua/bán": "rcm",
         "Tỷ lệ mua/bán": "bsRate",
         "Rủi to Vn-index": "riskVnindex",
         "Rủi to vĩ mô": "riskMacro",
-        "PE": "pe",
-        "PB": "pb",
+        PE: "pe",
+        PB: "pb",
       },
       showModal: false,
       dataImport: null,
@@ -214,9 +214,7 @@ export default {
     if (this.edit) {
       await this.$callApi.get("/api/vnindexpicks/" + this.id).then((res) => {
         this.dataForm = res.data.data;
-        this.dataForm.date = new Date(res.data.data.date)
-          .toISOString()
-          .split("T")[0];
+        this.dataForm.date = res.data.data.date.split(" ")[0];
       });
     }
   },
@@ -224,7 +222,10 @@ export default {
     async onSubmit() {
       try {
         if (this.edit) {
-          await this.$callApi.put("/api/vnindexpicks/" + this.id, this.dataForm);
+          await this.$callApi.put(
+            "/api/vnindexpicks/" + this.id,
+            this.dataForm
+          );
         } else {
           await this.$callApi.post("/api/vnindexpicks", this.dataForm);
         }

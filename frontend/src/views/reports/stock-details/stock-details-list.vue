@@ -2,11 +2,11 @@
   <div>
     <b-card p-5>
       <b-card-header class="d-flex justify-content-between align-items-center">
-        <b-card-title>Tìm kiếm chi tiết</b-card-title>
+        <b-card-title>Đánh giá mã cổ phiếu</b-card-title>
       </b-card-header>
       <b-card-body>
         <b-row>
-          <b-col md="6">
+          <b-col>
             <b-form-group label="Mã cổ phiếu" label-for="mc-stockCode">
               <v-select
                 v-model="searchData.stockCode"
@@ -18,7 +18,9 @@
               />
             </b-form-group>
           </b-col>
-          <b-col md="6">
+        </b-row>
+        <b-row>
+          <b-col>
             <b-form-group label="Ngành" label-for="mc-field">
               <b-form-input
                 v-model="searchData.field"
@@ -29,19 +31,7 @@
               />
             </b-form-group>
           </b-col>
-          <b-col md="6">
-            <b-form-group label="Quý" label-for="mc-quarter">
-              <v-select
-                v-model="searchData.quarter"
-                id="mc-quarter"
-                :options="options.stocks"
-                placeholder="Chọn quý"
-                :clearable="false"
-                :disabled="searchData.field == null"
-              />
-            </b-form-group>
-          </b-col>
-          <b-col md="6">
+          <b-col>
             <b-form-group label="Xếp hạng BCTC" label-for="mc-financialRank">
               <b-form-input
                 v-model="searchData.financialRank"
@@ -52,22 +42,17 @@
               />
             </b-form-group>
           </b-col>
-
-          <!-- submit and reset -->
-          <b-col class="d-flex justify-content-center">
-            <b-button type="submit" variant="primary" class="mr-1">
-              Tra cứu
-            </b-button>
-          </b-col>
         </b-row>
       </b-card-body>
     </b-card>
     <b-card p-5>
       <b-card-header class="d-flex justify-content-between align-items-center">
         <b-card-title>Phiên giao dịch chi tiết</b-card-title>
-        <div>
+        <div v-if="userData.role === 'ADMIN'">
+          <b-button variant="danger" class="btn-icon mr-1" @click="deleteList">
+            <feather-icon icon="TrashIcon" />
+          </b-button>
           <b-button
-            v-if="userData.role === 'ADMIN'"
             variant="primary"
             class="btn-icon mr-1"
             @click="
@@ -78,12 +63,7 @@
           >
             <feather-icon icon="PlusIcon" />
           </b-button>
-          <b-button
-            v-if="userData.role === 'ADMIN'"
-            variant="success"
-            class="btn-icon"
-            @click="exportToExcel"
-          >
+          <b-button variant="success" class="btn-icon" @click="exportToExcel">
             <feather-icon icon="DownloadIcon" />
           </b-button>
         </div>
@@ -96,6 +76,7 @@
                 v-model="searchData.dateFrom"
                 id="mc-date-from"
                 placeholder="Chọn từ ngày"
+                reset-button
                 @input="getData"
               />
             </b-form-group>
@@ -106,6 +87,7 @@
                 v-model="searchData.dateTo"
                 id="mc-date-to"
                 placeholder="Đến ngày"
+                reset-button
                 @input="getData"
               />
             </b-form-group>
@@ -117,6 +99,12 @@
             ref="goodTableRef"
             :columns="filteredColumns"
             :rows="rows"
+            :select-options="{
+              enabled: userData.role === 'ADMIN',
+              selectOnCheckboxOnly: true,
+              selectionText: 'dòng được chọn',
+              selectAllByGroup: true,
+            }"
             :pagination-options="{
               enabled: true,
               perPage: pageLength,
@@ -250,7 +238,7 @@ import StockDetailCreateOrEdit from "./stock-details-create-or-edit.vue";
 
 export default {
   components: {
-    "v-select": vSelect,
+    vSelect,
     VueGoodTable,
     BCard,
     BCardBody,
@@ -277,7 +265,6 @@ export default {
         stockCode: null,
         field: null,
         financialRank: null,
-        quarter: null,
         dateFrom: null,
         dateTo: null,
       },
@@ -305,6 +292,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
@@ -313,6 +301,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
           formatFn: (value) => {
             return value + "%";
@@ -324,6 +313,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
@@ -332,6 +322,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
           formatFn: (value) => {
             return value + "%";
@@ -343,6 +334,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
@@ -351,6 +343,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
@@ -359,6 +352,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
@@ -367,6 +361,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
           formatFn: (value) => {
             return value + "%";
@@ -378,6 +373,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
@@ -386,10 +382,11 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
-          label: "Thao tác",
+          label: "",
           field: "action",
         },
       ],
@@ -436,8 +433,60 @@ export default {
     await this.getData();
   },
   methods: {
+    async deleteList() {
+      const selectedItems = this.$refs.goodTableRef.selectedRows.map(
+        (item) => item.id
+      );
+      if (!selectedItems.length) {
+        this.$toast({
+          component: ToastificationContent,
+          position: "top-right",
+          props: {
+            title: "Không có mục nào được chọn!",
+            icon: "AlertCircleIcon",
+            variant: "danger",
+          },
+        });
+        return;
+      }
+
+      try {
+        await this.$callApi.post("/api/stockdetails/deleteList", {
+          ids: selectedItems,
+        });
+
+        this.$toast({
+          component: ToastificationContent,
+          position: "top-right",
+          props: {
+            title: `Thao tác thành công`,
+            icon: "CheckIcon",
+            variant: "success",
+            text: `Đã xóa các bản ghi được`,
+          },
+        });
+
+        // Làm mới danh sách hoặc cập nhật trạng thái trong bảng
+        this.getData();
+      } catch (error) {
+        this.$toast({
+          component: ToastificationContent,
+          position: "top-right",
+          props: {
+            title: `Thao tác thất bại`,
+            icon: "AlertCircleIcon",
+            variant: "danger",
+            text: error,
+          },
+        });
+        console.error(
+          "Error updating status:",
+          error.response || error.message
+        );
+      }
+    },
     onStockChange(stockCode) {
-      this.searchData.field = stockCode.value;
+      this.searchData.financialRank = null;
       this.$router.push(`/reports/stock-details/list/${stockCode.label}`);
       this.getData();
     },
@@ -446,23 +495,23 @@ export default {
         const data = res.data.data;
         data.forEach((item) => {
           this.options.stocks.push({
-            value: item.field,
+            value: item.code,
             label: item.code,
           });
+          if (item.code == this.$route.params.id) {
+            this.searchData.stockCode = item.code;
+          }
         });
       });
     },
     async getData() {
-      // await this.$callApi
-      //   .get("/api/stocks/" + this.$route.params.id)
-      //   .then((res) => {
-      //     const data = res.data.data;
-      //     this.searchData.stockCode = data.id;
-      //     this.searchData.field = data.field;
-      //     this.searchData.financialRank = data.financialRank;
-      //     this.searchData.quarter = data.quarter;
-      //   });
-
+      await this.$callApi
+        .get("/api/stocks/codeQuarter/" + this.$route.params.id)
+        .then((res) => {
+          const data = res.data.data;
+          this.searchData.field = data.field;
+          this.searchData.financialRank = data.financialRank;
+        });
       await this.$callApi
         .post("/api/stockDetails/date", {
           stockCode: this.$route.params.id,

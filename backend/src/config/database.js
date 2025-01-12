@@ -9,7 +9,12 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     dialect: "mysql",
     logging: false, // Tắt log SQL
-    timezone: "+07:00",
+    timezone: "+00:00", // Đặt timezone thành UTC
+    logging: false, // Tắt logging nếu không cần thiết
+    dialectOptions: {
+      dateStrings: true, // Trả về chuỗi thay vì đối tượng Date
+      typeCast: true, // Ép kiểu dữ liệu datetime thành chuỗi
+    },
   }
 );
 

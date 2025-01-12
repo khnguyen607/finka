@@ -22,18 +22,24 @@ const convertExcelDate = (excelDate) => {
  * @param {any} value - Giá trị cần kiểm tra
  * @returns {any} - Giá trị đã được chuyển đổi
  */
-
-const processValue = (value, columnIndex) => {
-  if (columnIndex === 0) {
+const processValue = (value) => {
+  if (typeof value === "string" && value.includes("%")) {
+    // Loại bỏ ký tự '%' và chuyển sang số
+    return parseFloat(value.replace("%", "").trim());
+  } else if (!isNaN(value) && typeof value === "number" && value > 10000) {
+    // Nếu là số ngày Excel, chuyển thành định dạng yyyy-mm-dd
     return convertExcelDate(value);
-  } else {
-    // Xử lý logic cho các cột khác
-    if (typeof value === "string" && value.includes("%")) {
-      // Loại bỏ ký tự '%' và chuyển sang số
-      return parseFloat(value.replace("%", "").trim());
-    }
+  } else if (
+    typeof value === "string" &&
+    new Date(value).toString() !== "Invalid Date"
+  ) {
+    // Nếu là chuỗi ngày, chuẩn hóa thành yyyy-mm-dd
+    const date = new Date(value);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(date.getDate()).padStart(2, "0")}`;
   }
-
   // Trả về giá trị gốc nếu không cần xử lý
   return value;
 };
@@ -62,8 +68,8 @@ export const excelToJson = (file) => {
         // Xử lý từng giá trị trong dữ liệu
         const processedData = jsonData.map((row) => {
           const processedRow = {};
-          Object.keys(row).forEach((key, columnIndex) => {
-            processedRow[key] = processValue(row[key], columnIndex); // Truyền thêm chỉ số cột vào processValue
+          Object.keys(row).forEach((key) => {
+            processedRow[key] = processValue(row[key]); // Xử lý từng giá trị
           });
           return processedRow;
         });

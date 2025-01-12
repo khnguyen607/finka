@@ -118,7 +118,8 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
+@import "@core/scss/vue/libs/vue-good-table.scss";
 table.vgt-table {
   font-size: 13px !important;
 }

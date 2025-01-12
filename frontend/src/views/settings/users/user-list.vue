@@ -187,7 +187,9 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
+          headerClasses: "custom-header-name",
         },
         {
           label: "Số điện thoại",
@@ -195,6 +197,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
@@ -203,6 +206,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
@@ -211,6 +215,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+filterValue: "",
           },
         },
         {
@@ -227,7 +232,7 @@ export default {
           },
         },
         {
-          label: "Thao tác",
+          label: "",
           field: "action",
         },
       ],

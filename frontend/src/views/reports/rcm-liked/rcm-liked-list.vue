@@ -111,7 +111,6 @@
 </template>
 
 <script>
-import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
 import {
   BCard,
   BCardBody,
@@ -182,6 +181,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
           },
           tdClass: "text-nowrap",
         },
@@ -191,6 +191,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
           },
         },
         {
@@ -199,6 +200,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
           },
         },
         {
@@ -207,6 +209,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
           },
         },
         {
@@ -215,6 +218,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
           },
           formatFn: (value) => {
             return value + "%";
@@ -226,6 +230,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
           },
         },
         {
@@ -234,6 +239,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
           },
         },
         {
@@ -242,6 +248,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
           },
         },
         {
@@ -250,6 +257,7 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
           },
           formatFn: (value) => {
             return value + "%";

@@ -39,10 +39,11 @@ const getModalById = async (req, res) => {
 
 const createModal = async (req, res) => {
   try {
-    const { code, field, financialRank, quarter } = req.body;
+    const { date, code, field, financialRank, quarter } = req.body;
 
     // Tạo người dùng mới
     const modal = await Modal.create({
+      date,
       code,
       field,
       financialRank,
@@ -61,7 +62,7 @@ const createModal = async (req, res) => {
 const updateModal = async (req, res) => {
   try {
     const { id } = req.params;
-    const { code, field, financialRank, quarter } = req.body;
+    const { date, code, field, financialRank, quarter } = req.body;
 
     const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
@@ -70,6 +71,7 @@ const updateModal = async (req, res) => {
 
     // Cập nhật thông tin người dùng
     await modal.update({
+      date,
       code,
       field,
       financialRank,
@@ -101,6 +103,84 @@ const deleteModal = async (req, res) => {
 };
 
 // Order Controller
+const getModalDate = async (req, res) => {
+  try {
+    const { dateFrom, dateTo } = req.body;
+
+    // Tạo điều kiện lọc
+    let whereCondition = null;
+    if (dateFrom && dateTo) {
+      whereCondition = {
+        date: {
+          [Op.between]: [new Date(dateFrom), new Date(dateTo)],
+        },
+      };
+    } else if (dateFrom) {
+      whereCondition = {
+        date: {
+          [Op.gte]: new Date(dateFrom),
+        },
+      };
+    } else if (dateTo) {
+      whereCondition = {
+        date: {
+          [Op.lte]: new Date(dateTo),
+        },
+      };
+    }
+
+    // Truy vấn dữ liệu
+    const vnindexpicks = await Modal.findAll({
+      raw: true,
+      where: whereCondition, // Nếu whereCondition là null, Sequelize sẽ bỏ qua điều kiện lọc.
+    });
+
+    const formattedModals = vnindexpicks.map((modal) => ({
+      ...modal,
+    }));
+
+    res.status(200).json({
+      message: "Modals retrieved successfully",
+      data: formattedModals,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const createModalList = async (req, res) => {
+  try {
+    const { data, overwrite } = req.body; // Lấy danh sách dữ liệu và cờ ghi đè từ request body
+
+    // Kiểm tra nếu không có dữ liệu hoặc dữ liệu không phải là mảng
+    if (!Array.isArray(data) || data.length === 0) {
+      return res.status(400).json({ message: "Invalid or empty data list" });
+    }
+
+    // Kiểm tra cờ ghi đè (overwrite)
+    const options = overwrite
+      ? {
+          updateOnDuplicate: ["date", "field", "financialRank"],
+        }
+      : {};
+
+    // Thêm dữ liệu mới hoặc cập nhật nếu cần
+    const createdModals = await Modal.bulkCreate(data, options);
+
+    res.status(201).json({
+      message: overwrite
+        ? "Modal list created/updated successfully"
+        : "Modal list created successfully",
+      data: createdModals,
+    });
+  } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(400).json({ message: "Data already exists" });
+    }
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const getDistinctCodes = async (req, res) => {
   try {
     const distinctCodes = await Modal.findAll({
@@ -116,6 +196,49 @@ const getDistinctCodes = async (req, res) => {
       message: "Distinct codes retrieved successfully",
       data: distinctCodes,
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// const getCodeQuarter = async (req, res) => {
+//   const { code } = req.params;
+//   try {
+//     const data = await Modal.findAll({
+//       attributes: ["code", "field", "financialRank", "quarter"],
+//       where: { code },
+//       raw: true,
+//     });
+
+//     res.status(200).json({
+//       message: "Distinct codes retrieved successfully",
+//       data: data,
+//     });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+const getCodeQuarter = async (req, res) => {
+  const { code } = req.params; // Lấy mã code từ request
+  try {
+    const data = await Modal.findOne({
+      attributes: ["code", "field", "financialRank", "quarter"],
+      where: { code },
+      order: [["quarter", "DESC"]],
+      raw: true,
+    });
+
+    if (data) {
+      res.status(200).json({
+        message: "Latest record retrieved successfully",
+        data: data,
+      });
+    } else {
+      res
+        .status(404)
+        .json({ message: "No record found for the provided code" });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -157,6 +280,9 @@ module.exports = {
   createModal,
   updateModal,
   deleteModal,
+  getModalDate,
+  createModalList,
   getDistinctCodes,
   deleteList,
+  getCodeQuarter,
 };

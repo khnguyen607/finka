@@ -10,7 +10,7 @@ const StockDetail = sequelize.define(
       autoIncrement: true,
     },
     stockCode: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     date: {

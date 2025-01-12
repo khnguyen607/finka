@@ -48,6 +48,23 @@
             </b-form-group>
           </b-col>
         </b-row>
+
+        <div class="text-right mb-1">
+          <b-button
+            variant="primary"
+            class="btn-icon btn-sm mr-1"
+            @click="openFilter"
+          >
+            <feather-icon icon="FilterIcon" size="15" />
+          </b-button>
+          <b-button
+            variant="info"
+            class="btn-icon btn-sm"
+            @click="showFilterModal = true"
+          >
+            <feather-icon icon="AlertCircleIcon" size="15" />
+          </b-button>
+        </div>
         <div>
           <!-- table -->
           <vue-good-table
@@ -162,6 +179,246 @@
         "
       />
     </b-modal>
+
+    <!-- Filter Modal -->
+    <b-modal
+      id="filter-modal"
+      v-model="showFilterModal"
+      title="Bộ lọc nâng cao"
+      ok-title="Lọc"
+      cancel-title="Đóng"
+      @ok="setFilter()"
+      :key="filterModalKey"
+    >
+      <!-- Form Lọc -->
+      <div v-for="(item, index) in tempFilters" :key="index">
+        <b-form-group
+          v-if="item.typeFilter === 'multiselect'"
+          :label="item.label"
+        >
+          <v-select
+            v-model="item.value"
+            :options="item.options"
+            :reduce="(option) => option.value"
+            multiple
+            :clearable="false"
+          />
+        </b-form-group>
+
+        <b-form-group 
+          v-if="item.typeFilter === 'range'" 
+          :label="item.label"
+        >
+          <b-row>
+            <b-col>
+              <b-form-input
+                v-model="item.minValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối thiểu"
+              />
+            </b-col>
+            <b-col>
+              <b-form-input
+                v-model="item.maxValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối đa"
+              />
+            </b-col>
+          </b-row>
+        </b-form-group>
+      </div>
+
+      <!-- <div
+        v-for="(item, index) in tempFilters"
+        :key="index"
+        v-if="item.typeFilter === 'range'"
+      >
+        <b-form-group :label="Thị giá">
+          <b-row>
+            <b-col>
+              <b-form-input
+                v-model="tempFilters.price.minValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối thiểu"
+              />
+            </b-col>
+            <b-col>
+              <b-form-input
+                v-model="tempFilters.price.maxValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối đa"
+              />
+            </b-col>
+          </b-row>
+        </b-form-group>
+      </div> -->
+      <!-- <b-form-group label="Mã CK">
+        <v-select
+          v-model="tempFilters.code.value"
+          :options="tempFilters.code.options"
+          :reduce="(option) => option.value"
+          multiple
+          :clearable="false"
+        />
+      </b-form-group>
+
+      <b-form-group label="Ngành">
+        <v-select
+          v-model="tempFilters.field.value"
+          :options="tempFilters.field.options"
+          :reduce="(option) => option.value"
+          multiple
+          :clearable="false"
+        />
+      </b-form-group>
+
+      <b-form-group label="Lệnh mua/bán">
+        <v-select
+          v-model="tempFilters.rcm.value"
+          :options="tempFilters.rcm.options"
+          :reduce="(option) => option.value"
+          multiple
+          :clearable="false"
+        />
+      </b-form-group>
+
+      <b-form-group label="Chu kỳ mua/bán">
+        <v-select
+          v-model="tempFilters.bsCycle.value"
+          :options="tempFilters.bsCycle.options"
+          :reduce="(option) => option.value"
+          multiple
+          :clearable="false"
+        />
+      </b-form-group> -->
+    </b-modal>
+    <b-modal
+      id="filter-modal"
+      v-model="showFilterModal"
+      title="Bộ lọc nâng cao"
+      ok-title="Lọc"
+      cancel-title="Đóng"
+      @ok="setFilter()"
+      :key="filterModalKey"
+    >
+      <!-- Form Lọc -->
+      <div v-for="(item, index) in tempFilters" :key="index">
+        <b-form-group
+          v-if="item.typeFilter === 'multiselect'"
+          :label="item.label"
+        >
+          <v-select
+            v-model="item.value"
+            :options="item.options"
+            :reduce="(option) => option.value"
+            multiple
+            :clearable="false"
+          />
+        </b-form-group>
+
+        <b-form-group 
+          v-if="item.typeFilter === 'range'" 
+          :label="item.label"
+        >
+          <b-row>
+            <b-col>
+              <b-form-input
+                v-model="item.minValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối thiểu"
+              />
+            </b-col>
+            <b-col>
+              <b-form-input
+                v-model="item.maxValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối đa"
+              />
+            </b-col>
+          </b-row>
+        </b-form-group>
+      </div>
+
+      <!-- <div
+        v-for="(item, index) in tempFilters"
+        :key="index"
+        v-if="item.typeFilter === 'range'"
+      >
+        <b-form-group :label="Thị giá">
+          <b-row>
+            <b-col>
+              <b-form-input
+                v-model="tempFilters.price.minValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối thiểu"
+              />
+            </b-col>
+            <b-col>
+              <b-form-input
+                v-model="tempFilters.price.maxValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối đa"
+              />
+            </b-col>
+          </b-row>
+        </b-form-group>
+      </div> -->
+      <!-- <b-form-group label="Mã CK">
+        <v-select
+          v-model="tempFilters.code.value"
+          :options="tempFilters.code.options"
+          :reduce="(option) => option.value"
+          multiple
+          :clearable="false"
+        />
+      </b-form-group>
+
+      <b-form-group label="Ngành">
+        <v-select
+          v-model="tempFilters.field.value"
+          :options="tempFilters.field.options"
+          :reduce="(option) => option.value"
+          multiple
+          :clearable="false"
+        />
+      </b-form-group>
+
+      <b-form-group label="Lệnh mua/bán">
+        <v-select
+          v-model="tempFilters.rcm.value"
+          :options="tempFilters.rcm.options"
+          :reduce="(option) => option.value"
+          multiple
+          :clearable="false"
+        />
+      </b-form-group>
+
+      <b-form-group label="Chu kỳ mua/bán">
+        <v-select
+          v-model="tempFilters.bsCycle.value"
+          :options="tempFilters.bsCycle.options"
+          :reduce="(option) => option.value"
+          multiple
+          :clearable="false"
+        />
+      </b-form-group> -->
+    </b-modal>
   </div>
 </template>
 
@@ -188,6 +445,7 @@ import {
 import { VueGoodTable } from "vue-good-table";
 import { exportExcel } from "@/views/components/exportExcel/ExportExcel";
 import RcmCreateOrEdit from "./rcm-create-or-edit.vue";
+import vSelect from "vue-select";
 
 export default {
   components: {
@@ -209,6 +467,7 @@ export default {
     BRow,
     BCol,
     RcmCreateOrEdit,
+    vSelect,
   },
   data() {
     return {
@@ -226,10 +485,6 @@ export default {
         {
           label: "Ngày",
           field: "date",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-          },
           formatFn: (value) => {
             if (!value) return "";
             const date = new Date(value);
@@ -245,8 +500,12 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "multiselect"),
           },
           tdClass: "text-nowrap",
+          typeFilter: "multiselect",
         },
         {
           label: "Ngành",
@@ -254,7 +513,11 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "multiselect"),
           },
+          typeFilter: "multiselect",
         },
         {
           label: "Thị giá",
@@ -262,7 +525,11 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
+          typeFilter: "range",
         },
         {
           label: "Lệnh mua/bán",
@@ -270,7 +537,11 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "multiselect"),
           },
+          typeFilter: "multiselect",
         },
         {
           label: "Tỷ lệ mua/bán",
@@ -278,10 +549,14 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
           formatFn: (value) => {
             return value + "%";
           },
+          typeFilter: "range",
         },
         {
           label: "Chu kỳ mua/bán",
@@ -289,7 +564,11 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "multiselect"),
           },
+          typeFilter: "multiselect",
         },
         {
           label: "P/E",
@@ -297,7 +576,11 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
+          typeFilter: "range",
         },
         {
           label: "P/B",
@@ -305,7 +588,11 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
+          typeFilter: "range",
         },
         {
           label: "ROE",
@@ -313,13 +600,17 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
           formatFn: (value) => {
             return value + "%";
           },
+          typeFilter: "range",
         },
         {
-          label: "Thao tác",
+          label: "",
           field: "action",
         },
       ],
@@ -327,6 +618,9 @@ export default {
       showModal: false,
       edit: false,
       id: null,
+      showFilterModal: false,
+      tempFilters: {},
+      filterModalKey: 0,
     };
   },
   computed: {
@@ -360,8 +654,108 @@ export default {
       };
     });
     await this.getData();
+    this.initModalFilter();
   },
   methods: {
+    openFilter() {
+      Object.keys(this.tempFilters).forEach((key) => {
+        delete this.tempFilters[key].value;
+      });
+      this.showFilterModal = true;
+      // this.filterModalKey++;
+    },
+    initModalFilter() {
+      this.initOptionsFilter();
+      this.initRangeFilter();
+      this.filterModalKey++;
+    },
+    setFilter() {
+      Object.keys(this.tempFilters).forEach((key) => {
+        const column = this.columns.find((item) => item.field === key);
+        if (column) {
+          if (Array.isArray(this.tempFilters[key].value)) {
+            column.filterOptions.filterValue =
+              this.tempFilters[key].value.join(",");
+          } else if (
+            this.tempFilters[key].minValue ||
+            this.tempFilters[key].maxValue
+          ) {
+            column.filterOptions.filterValue = `${this.tempFilters[key].minValue} - ${this.tempFilters[key].maxValue}`;
+          }
+        }
+      });
+    },
+    initOptionsFilter() {
+      const keys = this.columns.filter(
+        (item) => item.typeFilter === "multiselect"
+      );
+
+      const uniqueValues = {}; // Đối tượng chứa Set cho từng key
+      keys.forEach((key) => {
+        const field = key.field;
+        uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
+        this.tempFilters[field] = {};
+        this.tempFilters[field].label = key.label;
+        this.tempFilters[field].field = field;
+        this.tempFilters[field].options = [];
+        this.tempFilters[field].typeFilter = "multiselect";
+      });
+
+      // Duyệt qua toàn bộ dữ liệu
+      this.rows.forEach((item) => {
+        keys.forEach((key) => {
+          const field = key.field;
+          if (!uniqueValues[field].has(item[field])) {
+            uniqueValues[field].add(item[field]);
+            this.tempFilters[field].options.push({
+              label: item[field],
+              value: item[field],
+            });
+          }
+        });
+      });
+    },
+    initRangeFilter() {
+      const keys = this.columns.filter((item) => item.typeFilter === "range");
+      console.log(keys);
+      keys.forEach((key) => {
+        const field = key.field;
+        this.tempFilters[field] = {};
+        this.tempFilters[field].label = key.label;
+        this.tempFilters[field].field = field;
+        this.tempFilters[field].minValue = null;
+        this.tempFilters[field].maxValue = null;
+        this.tempFilters[field].typeFilter = "range";
+      });
+    },
+    applyFilter(rowValue, filterValue, filterType) {
+      switch (filterType) {
+        case "multiselect":
+          const data = filterValue.split(",");
+          if (!Array.isArray(data) || filterValue.length === 0) {
+            return true;
+          }
+          return filterValue.includes(rowValue);
+
+        case "range":
+          const [min, max] = filterValue
+            .split("-")
+            .map((v) => parseFloat(v.trim()));
+          if (!isNaN(min) && !isNaN(max)) {
+            return rowValue >= min && rowValue <= max;
+          }
+          if (!isNaN(min)) {
+            return rowValue >= min;
+          }
+          if (!isNaN(max)) {
+            return rowValue <= max;
+          }
+          return true;
+
+        default:
+          return true;
+      }
+    },
     async deleteList() {
       const selectedItems = this.$refs.goodTableRef.selectedRows.map(
         (item) => item.id
@@ -425,6 +819,7 @@ export default {
           this.rows = data.sort((a, b) => b.id - a.id);
           this.rows = data;
         });
+      console.log(this.rows);
     },
     exportToExcel() {
       exportExcel(

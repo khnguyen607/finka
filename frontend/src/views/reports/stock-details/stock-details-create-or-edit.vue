@@ -203,7 +203,7 @@ export default {
       default: null,
     },
     stockCode: {
-      type: Number,
+      type: String,
       required: true,
     },
   },
@@ -244,9 +244,7 @@ export default {
     if (this.edit) {
       await this.$callApi.get("/api/stockDetails/" + this.id).then((res) => {
         this.dataForm = res.data.data;
-        this.dataForm.date = new Date(res.data.data.date)
-          .toISOString()
-          .split("T")[0];
+        this.dataForm.date = res.data.data.date.split(" ")[0];
       });
     }
   },
@@ -302,9 +300,11 @@ export default {
       if (file) {
         try {
           this.dataImport = translateFields(await excelToJson(file));
-          console.log(this.dataImport);
           await this.$callApi.post("/api/stockDetails/createList", {
-            stockDetailList: { stockCode: this.stockCode, ...this.dataImport },
+            dataList: this.dataImport.map((item) => {
+              item.stockCode = this.stockCode;
+              return item;
+            }),
             overwrite: false,
           });
           this.$toast({
@@ -338,10 +338,7 @@ export default {
     },
     async handleOverwrite() {
       await this.$callApi.post("/api/stockDetails/createList", {
-        stockDetailList: {
-          stockCode: this.stockCode,
-          ...this.dataImport,
-        },
+        dataList: this.dataImport,
         overwrite: true,
       });
       this.$toast({
