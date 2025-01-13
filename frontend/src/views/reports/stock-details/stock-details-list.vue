@@ -93,6 +93,18 @@
             </b-form-group>
           </b-col>
         </b-row>
+        <div class="text-right mb-1">
+          <b-button
+            variant="primary"
+            class="btn-icon btn-sm mr-1"
+            @click="openFilter"
+          >
+            <feather-icon icon="FilterIcon" size="15" />
+          </b-button>
+          <b-button variant="info" class="btn-icon btn-sm">
+            <feather-icon icon="AlertCircleIcon" size="15" />
+          </b-button>
+        </div>
         <div>
           <!-- table -->
           <vue-good-table
@@ -200,13 +212,63 @@
       <StockDetailCreateOrEdit
         :edit="edit"
         :id="id"
-        :stockCode="searchData.stockCode"
+        :stockCode="codeStockCurrent"
         @submitted="
           getData();
           showModal = false;
           edit = false;
         "
       />
+    </b-modal>
+
+    <!-- Filter Modal -->
+    <b-modal
+      id="filter-modal"
+      v-model="showFilterModal"
+      title="Bộ lọc nâng cao"
+      ok-title="Lọc"
+      cancel-title="Đóng"
+      @ok="setFilter()"
+      :key="filterModalKey"
+    >
+      <!-- Form Lọc -->
+      <div v-for="(item, index) in tempFilters" :key="index">
+        <b-form-group
+          v-if="item.typeFilter === 'multiselect'"
+          :label="item.label"
+        >
+          <v-select
+            v-model="item.value"
+            :options="item.options"
+            :reduce="(option) => option.value"
+            multiple
+            :clearable="false"
+          />
+        </b-form-group>
+
+        <b-form-group v-if="item.typeFilter === 'range'" :label="item.label">
+          <b-row>
+            <b-col>
+              <b-form-input
+                v-model="item.minValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối thiểu"
+              />
+            </b-col>
+            <b-col>
+              <b-form-input
+                v-model="item.maxValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối đa"
+              />
+            </b-col>
+          </b-row>
+        </b-form-group>
+      </div>
     </b-modal>
   </div>
 </template>
@@ -292,8 +354,11 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
+          typeFilter: "range",
         },
         {
           label: "P&L hiện tại",
@@ -301,11 +366,14 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
           formatFn: (value) => {
             return value + "%";
           },
+          typeFilter: "range",
         },
         {
           label: "Lệnh mua/bán",
@@ -313,8 +381,11 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "multiselect"),
           },
+          typeFilter: "multiselect",
         },
         {
           label: "Tỷ lệ mua/bán",
@@ -322,11 +393,14 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
           formatFn: (value) => {
             return value + "%";
           },
+          typeFilter: "range",
         },
         {
           label: "Chu kỳ mua/bán",
@@ -334,8 +408,11 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "multiselect"),
           },
+          typeFilter: "multiselect",
         },
         {
           label: "P/E",
@@ -343,8 +420,11 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
+          typeFilter: "range",
         },
         {
           label: "P/B",
@@ -352,8 +432,11 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
+          typeFilter: "range",
         },
         {
           label: "ROE",
@@ -361,11 +444,14 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "range"),
           },
           formatFn: (value) => {
             return value + "%";
           },
+          typeFilter: "range",
         },
         {
           label: "Định giá",
@@ -373,8 +459,11 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "multiselect"),
           },
+          typeFilter: "multiselect",
         },
         {
           label: "Tín hiệu kỹ thuật",
@@ -382,8 +471,11 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
+            filterValue: "",
+            filterFn: (rowValue, filterValue) =>
+              this.applyFilter(rowValue, filterValue, "multiselect"),
           },
+          typeFilter: "multiselect",
         },
         {
           label: "",
@@ -397,6 +489,9 @@ filterValue: "",
       options: {
         stocks: [],
       },
+      showFilterModal: false,
+      tempFilters: {},
+      filterModalKey: 0,
     };
   },
   computed: {
@@ -420,6 +515,9 @@ filterValue: "",
         ? this.columns
         : this.columns.filter((column) => column.field !== "action");
     },
+    codeStockCurrent() {
+      return this.$route.params.id;
+    },
   },
   async created() {
     this.exportExcelData.columns = this.columns.map((item) => {
@@ -433,6 +531,104 @@ filterValue: "",
     await this.getData();
   },
   methods: {
+    openFilter() {
+      Object.keys(this.tempFilters).forEach((key) => {
+        delete this.tempFilters[key].value;
+      });
+      this.showFilterModal = true;
+    },
+    initModalFilter() {
+      this.initOptionsFilter();
+      this.initRangeFilter();
+      this.filterModalKey++;
+    },
+    setFilter() {
+      Object.keys(this.tempFilters).forEach((key) => {
+        const column = this.columns.find((item) => item.field === key);
+        if (column) {
+          if (Array.isArray(this.tempFilters[key].value)) {
+            column.filterOptions.filterValue =
+              this.tempFilters[key].value.join(",");
+          } else if (
+            this.tempFilters[key].minValue ||
+            this.tempFilters[key].maxValue
+          ) {
+            column.filterOptions.filterValue = `${this.tempFilters[key].minValue} - ${this.tempFilters[key].maxValue}`;
+          }
+        }
+      });
+    },
+    initOptionsFilter() {
+      const keys = this.columns.filter(
+        (item) => item.typeFilter === "multiselect"
+      );
+
+      const uniqueValues = {}; // Đối tượng chứa Set cho từng key
+      keys.forEach((key) => {
+        const field = key.field;
+        uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
+        this.tempFilters[field] = {};
+        this.tempFilters[field].label = key.label;
+        this.tempFilters[field].field = field;
+        this.tempFilters[field].options = [];
+        this.tempFilters[field].typeFilter = "multiselect";
+      });
+
+      // Duyệt qua toàn bộ dữ liệu
+      this.rows.forEach((item) => {
+        keys.forEach((key) => {
+          const field = key.field;
+          if (!uniqueValues[field].has(item[field])) {
+            uniqueValues[field].add(item[field]);
+            this.tempFilters[field].options.push({
+              label: item[field],
+              value: item[field],
+            });
+          }
+        });
+      });
+    },
+    initRangeFilter() {
+      const keys = this.columns.filter((item) => item.typeFilter === "range");
+      console.log(keys);
+      keys.forEach((key) => {
+        const field = key.field;
+        this.tempFilters[field] = {};
+        this.tempFilters[field].label = key.label;
+        this.tempFilters[field].field = field;
+        this.tempFilters[field].minValue = null;
+        this.tempFilters[field].maxValue = null;
+        this.tempFilters[field].typeFilter = "range";
+      });
+    },
+    applyFilter(rowValue, filterValue, filterType) {
+      switch (filterType) {
+        case "multiselect":
+          const data = filterValue.split(",");
+          if (!Array.isArray(data) || filterValue.length === 0) {
+            return true;
+          }
+          return filterValue.includes(rowValue);
+
+        case "range":
+          const [min, max] = filterValue
+            .split("-")
+            .map((v) => parseFloat(v.trim()));
+          if (!isNaN(min) && !isNaN(max)) {
+            return rowValue >= min && rowValue <= max;
+          }
+          if (!isNaN(min)) {
+            return rowValue >= min;
+          }
+          if (!isNaN(max)) {
+            return rowValue <= max;
+          }
+          return true;
+
+        default:
+          return true;
+      }
+    },
     async deleteList() {
       const selectedItems = this.$refs.goodTableRef.selectedRows.map(
         (item) => item.id
@@ -484,6 +680,7 @@ filterValue: "",
           error.response || error.message
         );
       }
+      this.initModalFilter();
     },
     onStockChange(stockCode) {
       this.searchData.financialRank = null;

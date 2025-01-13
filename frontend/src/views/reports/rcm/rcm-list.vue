@@ -57,11 +57,7 @@
           >
             <feather-icon icon="FilterIcon" size="15" />
           </b-button>
-          <b-button
-            variant="info"
-            class="btn-icon btn-sm"
-            @click="showFilterModal = true"
-          >
+          <b-button variant="info" class="btn-icon btn-sm">
             <feather-icon icon="AlertCircleIcon" size="15" />
           </b-button>
         </div>
@@ -205,10 +201,7 @@
           />
         </b-form-group>
 
-        <b-form-group 
-          v-if="item.typeFilter === 'range'" 
-          :label="item.label"
-        >
+        <b-form-group v-if="item.typeFilter === 'range'" :label="item.label">
           <b-row>
             <b-col>
               <b-form-input
@@ -324,10 +317,7 @@
           />
         </b-form-group>
 
-        <b-form-group 
-          v-if="item.typeFilter === 'range'" 
-          :label="item.label"
-        >
+        <b-form-group v-if="item.typeFilter === 'range'" :label="item.label">
           <b-row>
             <b-col>
               <b-form-input
@@ -654,7 +644,6 @@ export default {
       };
     });
     await this.getData();
-    this.initModalFilter();
   },
   methods: {
     openFilter() {
@@ -819,7 +808,7 @@ export default {
           this.rows = data.sort((a, b) => b.id - a.id);
           this.rows = data;
         });
-      console.log(this.rows);
+      this.initModalFilter();
     },
     exportToExcel() {
       exportExcel(
