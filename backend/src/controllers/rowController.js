@@ -1,12 +1,12 @@
-const Modal = require("../models/stockDetails");
-const { Op } = require("sequelize");
+const Modal = require("../models/rows");
+const { Sequelize, Op } = require("sequelize");
 
 const getModals = async (req, res) => {
   try {
-    const stockpicks = await Modal.findAll({
+    const modals = await Modal.findAll({
       raw: true,
     });
-    const formattedModals = stockpicks.map((modal) => ({
+    const formattedModals = modals.map((modal) => ({
       ...modal,
     }));
     res.status(200).json({
@@ -39,35 +39,14 @@ const getModalById = async (req, res) => {
 
 const createModal = async (req, res) => {
   try {
-    const {
-      stockCode,
-      date,
-      price,
-      pl,
-      rcm,
-      bsRate,
-      bsCycle,
-      pte,
-      ptb,
-      roe,
-      valuationLevel,
-      techSignal,
-    } = req.body;
+    const { tableId, code, date, data } = req.body;
 
     // Tạo người dùng mới
     const modal = await Modal.create({
-      stockCode,
+      tableId,
+      code,
       date,
-      price,
-      pl,
-      rcm,
-      bsRate,
-      bsCycle,
-      pte,
-      ptb,
-      roe,
-      valuationLevel,
-      techSignal,
+      data,
     });
 
     res.status(201).json({
@@ -82,20 +61,7 @@ const createModal = async (req, res) => {
 const updateModal = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      stockCode,
-      date,
-      price,
-      pl,
-      rcm,
-      bsRate,
-      bsCycle,
-      pte,
-      ptb,
-      roe,
-      valuationLevel,
-      techSignal,
-    } = req.body;
+    const { tableId, code, date, data } = req.body;
 
     const modal = await Modal.findByPk(id); // Tìm người dùng theo ID
     if (!modal) {
@@ -104,18 +70,10 @@ const updateModal = async (req, res) => {
 
     // Cập nhật thông tin người dùng
     await modal.update({
-      stockCode,
+      tableId,
+      code,
       date,
-      price,
-      pl,
-      rcm,
-      bsRate,
-      bsCycle,
-      pte,
-      ptb,
-      roe,
-      valuationLevel,
-      techSignal,
+      data,
     });
     res.status(200).json({
       message: "Modal updated successfully",
@@ -142,12 +100,13 @@ const deleteModal = async (req, res) => {
   }
 };
 
-const getModalDate = async (req, res) => {
+// Orther Controller
+const getModalByTable = async (req, res) => {
   try {
-    const { stockCode, dateFrom, dateTo } = req.body;
+    const { tableId, dateFrom, dateTo, codes, sortBy } = req.body;
 
-    // Tạo điều kiện lọc
-    let whereCondition = { stockCode }; // Khởi tạo điều kiện với stockCode
+    // Tạo điều kiện lọc cho ngày
+    let whereCondition = { tableId };
 
     if (dateFrom && dateTo) {
       whereCondition.date = {
@@ -163,13 +122,34 @@ const getModalDate = async (req, res) => {
       };
     }
 
+    // Thêm điều kiện lọc cho `codes`
+    if (codes && Array.isArray(codes) && codes.length > 0) {
+      whereCondition.code = {
+        [Op.in]: codes,
+      };
+    }
+
+    // Xử lý điều kiện sắp xếp
+    const orderCondition = [];
+    if (sortBy && Array.isArray(sortBy)) {
+      sortBy.forEach((item) => {
+        const [field, direction] = item.split(" ");
+        orderCondition.push([
+          field,
+          direction?.toUpperCase() === "DESC" ? "DESC" : "ASC",
+        ]);
+      });
+    }
+
     // Truy vấn dữ liệu
-    const stockpicks = await Modal.findAll({
+    const modals = await Modal.findAll({
       raw: true,
-      where: whereCondition, // Nếu whereCondition là null, Sequelize sẽ bỏ qua điều kiện lọc.
+      where: whereCondition,
+      order: orderCondition, // Áp dụng sắp xếp
     });
 
-    const formattedModals = stockpicks.map((modal) => ({
+    // Format lại dữ liệu nếu cần
+    const formattedModals = modals.map((modal) => ({
       ...modal,
     }));
 
@@ -178,53 +158,6 @@ const getModalDate = async (req, res) => {
       data: formattedModals,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-const createModalList = async (req, res) => {
-  try {
-    const { dataList, overwrite } = req.body; // Lấy danh sách dữ liệu và cờ ghi đè từ request body
-    
-    // Kiểm tra nếu không có dữ liệu hoặc dữ liệu không phải là mảng
-    if (!Array.isArray(dataList) || dataList.length === 0) {
-      return res.status(400).json({ message: "Invalid or empty data list" });
-    }
-
-    // Kiểm tra cờ ghi đè (overwrite)
-    const options = overwrite
-      ? {
-          updateOnDuplicate: [
-            "price",
-            "pl",
-            "rcm",
-            "bsRate",
-            "bsCycle",
-            "pte",
-            "ptb",
-            "roe",
-            "valuationLevel",
-            "techSignal",
-          ],
-        }
-      : {};
-
-    // Thêm dữ liệu mới hoặc cập nhật nếu cần
-    const createdModals = await Modal.bulkCreate(
-      dataList,
-      options
-    );
-
-    res.status(201).json({
-      message: overwrite
-        ? "Modal list created/updated successfully"
-        : "Modal list created successfully",
-      data: createdModals,
-    });
-  } catch (error) {
-    if (error.name === "SequelizeUniqueConstraintError") {
-      return res.status(400).json({ message: "Data already exists" });
-    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -258,6 +191,47 @@ const deleteList = async (req, res) => {
   }
 };
 
+const createModalList = async (req, res) => {
+  try {
+    const { dataList, overwrite } = req.body; // Lấy danh sách dữ liệu và cờ ghi đè từ request body
+
+    // Kiểm tra nếu không có dữ liệu hoặc dữ liệu không phải là mảng
+    if (!Array.isArray(dataList) || dataList.length === 0) {
+      return res.status(400).json({ message: "Invalid or empty data list" });
+    }
+
+    // Kiểm tra cờ ghi đè (overwrite)
+    const options = overwrite
+      ? {
+          updateOnDuplicate: [
+            "field",
+            "price",
+            "rcm",
+            "bsRate",
+            "bsCycle",
+            "pte",
+            "ptb",
+            "roe",
+          ],
+        }
+      : {};
+
+    // Thêm dữ liệu mới hoặc cập nhật nếu cần
+    const createdModals = await Modal.bulkCreate(dataList, options);
+
+    res.status(201).json({
+      message: overwrite
+        ? "Modal list created/updated successfully"
+        : "Modal list created successfully",
+      data: createdModals,
+    });
+  } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(400).json({ message: "Data already exists" });
+    }
+    res.status(500).json({ error: error.message });
+  }
+};
 // Xuất các hàm CRUD
 module.exports = {
   getModals,
@@ -265,7 +239,7 @@ module.exports = {
   createModal,
   updateModal,
   deleteModal,
-  getModalDate,
-  createModalList,
+  getModalByTable,
   deleteList,
+  createModalList,
 };

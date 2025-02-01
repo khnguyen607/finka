@@ -187,7 +187,6 @@ export default {
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
           },
           headerClasses: "custom-header-name",
         },
@@ -197,7 +196,6 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
           },
         },
         {
@@ -206,7 +204,6 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
           },
         },
         {
@@ -215,7 +212,6 @@ filterValue: "",
           filterOptions: {
             enabled: true,
             placeholder: "Lọc",
-filterValue: "",
           },
         },
         {

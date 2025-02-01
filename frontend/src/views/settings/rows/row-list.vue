@@ -2,11 +2,21 @@
   <div>
     <b-card p-5>
       <b-card-header class="d-flex justify-content-between align-items-center">
-        <b-card-title>Mã cổ phiếu khuyến nghị</b-card-title>
+        <v-select
+          v-model="tableSelected"
+          :options="tables"
+          :reduce="(option) => option.value"
+          :clearable="false"
+          style="width: 30%"
+          @input="getData"
+        />
         <div v-if="userData.role === 'ADMIN'">
+          <b-button variant="danger" class="btn-icon mr-1" @click="deleteList">
+            <feather-icon icon="TrashIcon" />
+          </b-button>
           <b-button
             variant="primary"
-            class="btn-icon mr-1"
+            class="btn-icon"
             @click="
               showModal = true;
               edit = false;
@@ -18,49 +28,18 @@
         </div>
       </b-card-header>
       <b-card-body>
-        <b-row>
-          <b-col md="6">
-            <b-form-group label="Từ ngày" label-for="mc-date-from">
-              <b-form-datepicker
-                v-model="searchData.dateFrom"
-                id="mc-date-from"
-                placeholder="Chọn từ ngày"
-                reset-button
-                @input="getData"
-              />
-            </b-form-group>
-          </b-col>
-          <b-col md="6">
-            <b-form-group label="Đến ngày" label-for="mc-date-to">
-              <b-form-datepicker
-                v-model="searchData.dateTo"
-                id="mc-date-to"
-                placeholder="Đến ngày"
-                reset-button
-                @input="getData"
-              />
-            </b-form-group>
-          </b-col>
-        </b-row>
-
-        <div class="text-right mb-1">
-          <b-button
-            variant="primary"
-            class="btn-icon btn-sm mr-1"
-            @click="openFilter"
-          >
-            <feather-icon icon="FilterIcon" size="15" />
-          </b-button>
-          <b-button variant="info" class="btn-icon btn-sm">
-            <feather-icon icon="AlertCircleIcon" size="15" />
-          </b-button>
-        </div>
         <div>
           <!-- table -->
           <vue-good-table
             ref="goodTableRef"
-            :columns="filteredColumns"
+            :columns="columns"
             :rows="rows"
+            :select-options="{
+              enabled: this.rows.length > 0,
+              selectOnCheckboxOnly: true,
+              selectionText: 'dòng được chọn',
+              selectAllByGroup: true,
+            }"
             :pagination-options="{
               enabled: true,
               perPage: pageLength,
@@ -71,6 +50,31 @@
                 <b-badge :variant="statusVariant(props.row.review)">
                   {{ props.row.review }}
                 </b-badge>
+              </span>
+              <span v-else-if="props.column.field === 'action'">
+                <span>
+                  <b-dropdown
+                    variant="link"
+                    toggle-class="text-decoration-none"
+                    no-caret
+                  >
+                    <template v-slot:button-content>
+                      <feather-icon
+                        icon="MoreVerticalIcon"
+                        size="16"
+                        class="text-body align-middle mr-25"
+                      />
+                    </template>
+                    <b-dropdown-item @click="showModalEdit(props.row.id)">
+                      <feather-icon icon="Edit2Icon" class="mr-50" />
+                      <span>Sửa</span>
+                    </b-dropdown-item>
+                    <b-dropdown-item @click="deleteItem(props.row.id)">
+                      <feather-icon icon="TrashIcon" class="mr-50" />
+                      <span>Xóa</span>
+                    </b-dropdown-item>
+                  </b-dropdown>
+                </span>
               </span>
             </template>
             <!-- pagination -->
@@ -128,9 +132,10 @@
       hide-footer
       size="lg"
     >
-      <RcmCreateOrEdit
+      <TableCreateOrEdit
         :edit="edit"
         :id="id"
+        :tableId="tableSelected"
         @submitted="
           getData();
           showModal = false;
@@ -138,60 +143,11 @@
         "
       />
     </b-modal>
-
-    <!-- Filter Modal -->
-    <b-modal
-      v-if="showFilterModal"
-      v-model="showFilterModal"
-      id="filter-modal"
-      title="Bộ lọc nâng cao"
-      ok-title="Lọc"
-      cancel-title="Đóng"
-      @ok="setFilter()"
-    >
-      <!-- Form Lọc -->
-      <div v-for="(item, index) in tempFilters" :key="index">
-        <b-form-group
-          v-if="item.typeFilter === 'multiselect'"
-          :label="item.label"
-        >
-          <v-select
-            v-model="item.value"
-            :options="item.options"
-            :reduce="(option) => option.value"
-            multiple
-            :clearable="false"
-          />
-        </b-form-group>
-
-        <b-form-group v-if="item.typeFilter === 'range'" :label="item.label">
-          <b-row>
-            <b-col>
-              <b-form-input
-                v-model="item.minValue"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Giá trị tối thiểu"
-              />
-            </b-col>
-            <b-col>
-              <b-form-input
-                v-model="item.maxValue"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Giá trị tối đa"
-              />
-            </b-col>
-          </b-row>
-        </b-form-group>
-      </div>
-    </b-modal>
   </div>
 </template>
 
 <script>
+import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
 import {
   BCard,
   BCardBody,
@@ -211,7 +167,7 @@ import {
   BCol,
 } from "bootstrap-vue";
 import { VueGoodTable } from "vue-good-table";
-import RcmCreateOrEdit from "./rcm-create-or-edit.vue";
+import TableCreateOrEdit from "./row-create-or-edit.vue";
 import vSelect from "vue-select";
 import { getRows } from "@/utils/getRows";
 
@@ -234,7 +190,7 @@ export default {
     BFormDatepicker,
     BRow,
     BCol,
-    RcmCreateOrEdit,
+    TableCreateOrEdit,
     vSelect,
   },
   data() {
@@ -244,15 +200,21 @@ export default {
         dateFrom: null,
         dateTo: null,
       },
-      pageLength: 10,
       columns: [],
       rows: [],
       showModal: false,
       edit: false,
       id: null,
-      showFilterModal: false,
       tempFilters: {},
-      filterModalKey: Date.now(),
+      filterModalKey: 0,
+      tables: [
+        {
+          value: null,
+          label: "Chọn bảng dữ liệu",
+        },
+      ],
+      tableSelected: null,
+      pageLength: 10,
     };
   },
   computed: {
@@ -271,116 +233,78 @@ export default {
 
       return (status) => statusColor[status];
     },
-    filteredColumns() {
-      return this.userData.role === "ADMIN"
-        ? this.columns
-        : this.columns.filter((column) => column.field !== "action");
-    },
   },
   async created() {
-    await this.getColumns();
-    await this.getData();
+    await this.getTables();
   },
   methods: {
-    openFilter() {
-      Object.keys(this.tempFilters).forEach((key) => {
-        delete this.tempFilters[key].value;
-      });
-      this.showFilterModal = true;
-    },
-    initModalFilter() {
-      this.initOptionsFilter();
-      this.initRangeFilter();
-      this.filterModalKey = Date.now();
-    },
-    setFilter() {
-      Object.keys(this.tempFilters).forEach((key) => {
-        const column = this.columns.find((item) => item.field === key);
-        if (column) {
-          if (Array.isArray(this.tempFilters[key].value)) {
-            column.filterOptions.filterValue =
-              this.tempFilters[key].value.join(",");
-          } else if (
-            this.tempFilters[key].minValue ||
-            this.tempFilters[key].maxValue
-          ) {
-            column.filterOptions.filterValue = `${this.tempFilters[key].minValue} - ${this.tempFilters[key].maxValue}`;
-          }
-        }
-      });
-    },
-    initOptionsFilter() {
-      const keys = this.columns.filter(
-        (item) => item.typeFilter === "multiselect"
-      );
-
-      const uniqueValues = {}; // Đối tượng chứa Set cho từng key
-      keys.forEach((key) => {
-        const field = key.field;
-        uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
-        this.tempFilters[field] = {};
-        this.tempFilters[field].label = key.label;
-        this.tempFilters[field].field = field;
-        this.tempFilters[field].options = [];
-        this.tempFilters[field].typeFilter = "multiselect";
-      });
-
-      // Duyệt qua toàn bộ dữ liệu
-      this.rows.forEach((item) => {
-        keys.forEach((key) => {
-          const field = key.field;
-          if (!uniqueValues[field].has(item[field])) {
-            uniqueValues[field].add(item[field]);
-            this.tempFilters[field].options.push({
-              label: item[field],
-              value: item[field],
-            });
-          }
+    async getTables() {
+      await this.$callApi.get("/api/tables").then((res) => {
+        const data = res.data.data;
+        this.tables = data.map((item) => {
+          return {
+            value: item.id,
+            label: item.name,
+          };
         });
       });
     },
-    initRangeFilter() {
-      const keys = this.columns.filter((item) => item.typeFilter === "range");
-      keys.forEach((key) => {
-        const field = key.field;
-        this.tempFilters[field] = {};
-        this.tempFilters[field].label = key.label;
-        this.tempFilters[field].field = field;
-        this.tempFilters[field].minValue = null;
-        this.tempFilters[field].maxValue = null;
-        this.tempFilters[field].typeFilter = "range";
-      });
-    },
-    applyFilter(rowValue, filterValue, filterType) {
-      switch (filterType) {
-        case "multiselect":
-          const data = filterValue.split(",");
-          if (!Array.isArray(data) || filterValue.length === 0) {
-            return true;
-          }
-          return filterValue.includes(rowValue);
+    async deleteList() {
+      const selectedItems = this.$refs.goodTableRef.selectedRows.map(
+        (item) => item.id
+      );
+      if (!selectedItems.length) {
+        this.$toast({
+          component: ToastificationContent,
+          position: "top-right",
+          props: {
+            title: "Không có mục nào được chọn!",
+            icon: "AlertCircleIcon",
+            variant: "danger",
+          },
+        });
+        return;
+      }
 
-        case "range":
-          const [min, max] = filterValue
-            .split("-")
-            .map((v) => parseFloat(v.trim()));
-          if (!isNaN(min) && !isNaN(max)) {
-            return rowValue >= min && rowValue <= max;
-          }
-          if (!isNaN(min)) {
-            return rowValue >= min;
-          }
-          if (!isNaN(max)) {
-            return rowValue <= max;
-          }
-          return true;
+      try {
+        await this.$callApi.post("/api/rows/deleteList", {
+          ids: selectedItems,
+        });
 
-        default:
-          return true;
+        this.$toast({
+          component: ToastificationContent,
+          position: "top-right",
+          props: {
+            title: `Thao tác thành công`,
+            icon: "CheckIcon",
+            variant: "success",
+            text: `Đã xóa các bản ghi được`,
+          },
+        });
+
+        // Làm mới danh sách hoặc cập nhật trạng thái trong bảng
+        this.getData();
+      } catch (error) {
+        this.$toast({
+          component: ToastificationContent,
+          position: "top-right",
+          props: {
+            title: `Thao tác thất bại`,
+            icon: "AlertCircleIcon",
+            variant: "danger",
+            text: error,
+          },
+        });
+        console.error(
+          "Error updating status:",
+          error.response || error.message
+        );
       }
     },
     async getColumns() {
-      const data = await this.$callApi.get("/api/columns/table/1");
+      const data = await this.$callApi.get(
+        "/api/columns/table/" + this.tableSelected
+      );
       const temp = data.data.data.sort((a, b) => a.indexing - b.indexing);
       this.columns = [];
       temp.forEach((item) => {
@@ -435,25 +359,65 @@ export default {
           }
         }
       });
+      this.columns.push({
+        label: "Thao tác",
+        field: "action",
+        tdClass: "text-nowrap",
+      });
     },
     async getData() {
+      await this.getColumns();
       const params = {
-        tableId: 1,
+        tableId: this.tableSelected,
         dateFrom: this.searchData.dateFrom,
         dateTo: this.searchData.dateTo,
         codes: null,
-        sortBy: null,
+        sortBy: ["date desc"],
       };
       const data = await getRows(this.$callApi, params);
       this.rows = [];
       data.forEach((item) => {
         this.rows.push({
+          id: item.id,
           code: item.code,
           date: item.date,
           ...item.data,
         });
       });
-      this.initModalFilter();
+      console.log(this.rows);
+    },
+    showModalEdit(id) {
+      this.id = id;
+      this.edit = true;
+      this.showModal = true;
+    },
+    async deleteItem(id) {
+      await this.$callApi
+        .delete("/api/rows/" + id)
+        .then(async () => {
+          await this.getData();
+          this.$toast({
+            component: ToastificationContent,
+            position: "top-right",
+            props: {
+              title: `Xóa thành công`,
+              icon: "CheckIcon",
+              variant: "success",
+            },
+          });
+        })
+        .catch(() => {
+          this.$toast({
+            component: ToastificationContent,
+            position: "top-right",
+            props: {
+              title: `Lỗi`,
+              icon: "AlertCircleIcon",
+              variant: "danger",
+              text: error,
+            },
+          });
+        });
     },
   },
 };

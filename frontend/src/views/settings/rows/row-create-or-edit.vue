@@ -2,101 +2,13 @@
   <div>
     <b-form @submit.prevent>
       <b-row>
-        <b-col md="3">
-          <b-form-group label="Ngày" label-for="mc-date">
-            <b-form-input v-model="dataForm.date" id="mc-date" type="date" />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="Mã CK" label-for="mc-code">
+        <b-col md="3" v-for="item in inputFields" :key="item.key">
+          <b-form-group :label="item.label" :label-for="'mc-' + item.key">
             <b-form-input
-              v-model="dataForm.code"
-              id="mc-code"
-              type="text"
-              placeholder="Mã CK"
-            /> 
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="Ngành" label-for="mc-field">
-            <b-form-input
-              v-model="dataForm.field"
-              id="mc-field"
-              type="text"
-              placeholder="Ngành"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="Thị giá" label-for="mc-price">
-            <b-form-input
-              v-model="dataForm.price"
-              id="mc-price"
-              type="number"
-              step="0.01"
-              placeholder="Thị giá"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="Lệnh mua/bán" label-for="mc-rcm">
-            <b-form-input
-              v-model="dataForm.rcm"
-              id="mc-rcm"
-              type="text"
-              placeholder="Lệnh mua/bán"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="Tỉ lệ mua/bán" label-for="mc-bsRate">
-            <b-form-input
-              v-model="dataForm.bsRate"
-              id="mc-bsRate"
-              type="number"
-              placeholder="Tỉ lệ mua/bán"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="Chu kỳ mua/bán" label-for="mc-bsCycle">
-            <b-form-input
-              v-model="dataForm.bsCycle"
-              id="mc-bsCycle"
-              type="text"
-              placeholder="Chu kỳ mua/bán"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="P/E" label-for="mc-pte">
-            <b-form-input
-              v-model="dataForm.pte"
-              id="mc-pte"
-              type="number"
-              step="0.01"
-              placeholder="P/E"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="P/B" label-for="mc-ptb">
-            <b-form-input
-              v-model="dataForm.ptb"
-              id="mc-ptb"
-              type="number"
-              step="0.01"
-              placeholder="P/B"
-            />
-          </b-form-group>
-        </b-col>
-        <b-col md="3">
-          <b-form-group label="ROE" label-for="mc-roe">
-            <b-form-input
-              v-model="dataForm.roe"
-              id="mc-roe"
-              type="number"
-              placeholder="ROE"
+              v-model="dataForm[item.key]"
+              :id="'mc-' + item.key"
+              :type="item.type"
+              :placeholder="item.label"
             />
           </b-form-group>
         </b-col>
@@ -167,6 +79,7 @@ import {
 } from "bootstrap-vue";
 import Ripple from "vue-ripple-directive";
 import { excelToJson } from "@/utils/excelToJson";
+import { del } from "vue";
 
 export default {
   components: {
@@ -192,52 +105,88 @@ export default {
       type: Number,
       default: null,
     },
+    tableId: {
+      type: Number,
+      default: null,
+    },
   },
   data() {
     return {
-      dataForm: {
-        date: null,
-        code: null,
-        field: null,
-        price: null,
-        rcm: null,
-        bsRate: null,
-        bsCycle: null,
-        pte: null,
-        ptb: null,
-        roe: null,
-      },
-      fieldMapping: {
-        "Ngày": "date",
-        "Mã CK": "code",
-        Ngành: "field",
-        "Thị giá": "price",
-        "Lệnh mua/bán": "rcm",
-        "Tỷ lệ mua/bán": "bsRate",
-        "Chu kỳ mua/bán": "bsCycle",
-        "P/E": "pte",
-        "P/B": "ptb",
-        ROE: "roe",
-      },
+      inputFields: [],
+      dataForm: {},
+      fieldMapping: {},
       showModal: false,
       dataImport: null,
     };
   },
   async created() {
+    await this.getColumns();
     if (this.edit) {
-      await this.$callApi.get("/api/stockpicks/" + this.id).then((res) => {
-        this.dataForm = res.data.data;
+      await this.$callApi.get("/api/rows/" + this.id).then((res) => {
+        const data = res.data.data;
+        this.dataForm = {
+          date: data.date,
+          code: data.code,
+          ...data.data,
+        };
         this.dataForm.date = res.data.data.date.split(" ")[0];
       });
     }
   },
   methods: {
+    async getColumns() {
+      const data = await this.$callApi.get(
+        "/api/columns/table/" + this.tableId
+      );
+      const temp = data.data.data.sort((a, b) => a.indexing - b.indexing);
+      this.dataForm = {};
+      this.fieldMapping = {};
+      temp.forEach((item) => {
+        this.dataForm[item.key] = null;
+        switch (item.dataType) {
+          case "date":
+            this.inputFields.push({
+              label: item.label,
+              key: item.key,
+              type: "date",
+            });
+            break;
+          case "number":
+            this.inputFields.push({
+              label: item.label,
+              key: item.key,
+              type: "number",
+            });
+            break;
+          default:
+            this.inputFields.push({
+              label: item.label,
+              key: item.key,
+              type: "text",
+            });
+            break;
+        }
+
+        if (item.key !== "code" || item.key !== "date") {
+          this.fieldMapping[item.label] = item.key;
+        }
+      });
+    },
     async onSubmit() {
+      let data = { ...this.dataForm };
+      delete data.date;
+      delete data.code;
+      const dataForm = {
+        tableId: this.tableId,
+        code: this.dataForm.code,
+        date: this.dataForm.date,
+        data: data,
+      };
       try {
         if (this.edit) {
-          await this.$callApi.put("/api/stockpicks/" + this.id, this.dataForm);
+          await this.$callApi.put("/api/rows/" + this.id, dataForm);
         } else {
-          await this.$callApi.post("/api/stockpicks", this.dataForm);
+          await this.$callApi.post("/api/rows", dataForm);
         }
         this.$toast({
           component: ToastificationContent,
@@ -273,14 +222,22 @@ export default {
               translatedItem[this.fieldMapping[key]] = item[key];
             }
           }
-          return translatedItem;
+          const temp = { ...translatedItem };
+          delete temp.code;
+          delete temp.date;
+          return {
+            tableId: this.tableId,
+            code: translatedItem.code,
+            date: translatedItem.date,
+            data: temp,
+          };
         });
       };
       const file = event.target.files[0];
       if (file) {
         try {
           this.dataImport = translateFields(await excelToJson(file));
-          await this.$callApi.post("/api/stockpicks/createList", {
+          await this.$callApi.post("/api/rows/createList", {
             dataList: this.dataImport,
             overwrite: false,
           });
@@ -314,7 +271,7 @@ export default {
       }
     },
     async handleOverwrite() {
-      await this.$callApi.post("/api/stockpicks/createList", {
+      await this.$callApi.post("/api/rows/createList", {
         dataList: this.dataImport,
         overwrite: true,
       });

@@ -8,6 +8,9 @@ const stockpickRoutes = require("./routes/stockpickRoutes");
 const stockRoutes = require("./routes/stockRoutes");
 const stockDetailRoutes = require("./routes/stockDetailRoutes");
 const vnindexpickRoutes = require("./routes/vnindexpickRoutes");
+const tableRoutes = require("./routes/tableRoutes");
+const columnRoutes = require("./routes/columnRoutes");
+const rowRoutes = require("./routes/rowRoutes");
 
 const app = express();
 
@@ -22,5 +25,8 @@ app.use("/api/stockpicks", stockpickRoutes);
 app.use("/api/stocks", stockRoutes);
 app.use("/api/stockDetails", stockDetailRoutes);
 app.use("/api/vnindexpicks", vnindexpickRoutes);
+app.use("/api/tables", tableRoutes);
+app.use("/api/columns", columnRoutes);
+app.use("/api/rows", rowRoutes);
 
 module.exports = app;
