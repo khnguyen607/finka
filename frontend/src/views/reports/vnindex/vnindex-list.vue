@@ -3,23 +3,23 @@
     <b-card p-5>
       <b-card-header class="d-flex justify-content-between align-items-center">
         <b-card-title>Mã cổ phiếu khuyến nghị</b-card-title>
-        <div v-if="userData.role === 'ADMIN'">
-          <b-button variant="danger" class="btn-icon mr-1" @click="deleteList">
-            <feather-icon icon="TrashIcon" />
+        <div>
+          <!-- <b-button
+            variant="secondary"
+            class="btn-icon mr-1"
+            @click="showModal = true"
+          >
+            <feather-icon icon="EyeOffIcon" />
+          </b-button> -->
+          <b-button variant="primary" class="btn-icon mr-1" @click="openFilter">
+            <feather-icon icon="FilterIcon" />
           </b-button>
           <b-button
-            variant="primary"
-            class="btn-icon mr-1"
-            @click="
-              showModal = true;
-              edit = false;
-              id = null;
-            "
+            variant="info"
+            class="btn-icon"
+            @click="showAnnotationModal = true"
           >
-            <feather-icon icon="PlusIcon" />
-          </b-button>
-          <b-button variant="success" class="btn-icon" @click="exportToExcel">
-            <feather-icon icon="DownloadIcon" />
+            <feather-icon icon="AlertCircleIcon" />
           </b-button>
         </div>
       </b-card-header>
@@ -48,30 +48,12 @@
             </b-form-group>
           </b-col>
         </b-row>
-        <div class="text-right mb-1">
-          <b-button
-            variant="primary"
-            class="btn-icon btn-sm mr-1"
-            @click="openFilter"
-          >
-            <feather-icon icon="FilterIcon" size="15" />
-          </b-button>
-          <b-button variant="info" class="btn-icon btn-sm">
-            <feather-icon icon="AlertCircleIcon" size="15" />
-          </b-button>
-        </div>
         <div>
           <!-- table -->
           <vue-good-table
             ref="goodTableRef"
             :columns="filteredColumns"
             :rows="rows"
-            :select-options="{
-              enabled: userData.role === 'ADMIN',
-              selectOnCheckboxOnly: true,
-              selectionText: 'dòng được chọn',
-              selectAllByGroup: true,
-            }"
             :pagination-options="{
               enabled: true,
               perPage: pageLength,
@@ -82,31 +64,6 @@
                 <b-badge :variant="statusVariant(props.row.review)">
                   {{ props.row.review }}
                 </b-badge>
-              </span>
-              <span v-else-if="props.column.field === 'action'">
-                <span>
-                  <b-dropdown
-                    variant="link"
-                    toggle-class="text-decoration-none"
-                    no-caret
-                  >
-                    <template v-slot:button-content>
-                      <feather-icon
-                        icon="MoreVerticalIcon"
-                        size="16"
-                        class="text-body align-middle mr-25"
-                      />
-                    </template>
-                    <b-dropdown-item @click="showModalEdit(props.row.id)">
-                      <feather-icon icon="Edit2Icon" class="mr-50" />
-                      <span>Sửa</span>
-                    </b-dropdown-item>
-                    <b-dropdown-item @click="deleteItem(props.row.id)">
-                      <feather-icon icon="TrashIcon" class="mr-50" />
-                      <span>Xóa</span>
-                    </b-dropdown-item>
-                  </b-dropdown>
-                </span>
               </span>
             </template>
             <!-- pagination -->
@@ -160,30 +117,27 @@
     <b-modal
       id="add-item-modal"
       v-model="showModal"
-      :title="edit ? 'Chỉnh sửa' : 'Thêm mới'"
+      title="Hiển thị cột"
       hide-footer
       size="lg"
     >
-      <VnindexCreateOrEdit
-        :edit="edit"
-        :id="id"
+      <RcmHideData
         @submitted="
           getData();
           showModal = false;
-          edit = false;
         "
       />
     </b-modal>
 
     <!-- Filter Modal -->
     <b-modal
-      id="filter-modal"
+      v-if="showFilterModal"
       v-model="showFilterModal"
+      id="filter-modal"
       title="Bộ lọc nâng cao"
       ok-title="Lọc"
       cancel-title="Đóng"
       @ok="setFilter()"
-      :key="filterModalKey"
     >
       <!-- Form Lọc -->
       <div v-for="(item, index) in tempFilters" :key="index">
@@ -224,11 +178,30 @@
         </b-form-group>
       </div>
     </b-modal>
+
+    <!-- Annotation Modal -->
+    <b-modal
+      v-model="showAnnotationModal"
+      title="Chú thích"
+      hide-footer
+      centered
+    >
+      <b-list-group>
+        <b-list-group-item
+          v-for="(annotation, index) in annotations"
+          :key="index"
+        >
+          <strong
+            >{{ annotation.keyword }}:
+            <span class="text-muted">{{ annotation.annotation }}</span></strong
+          >
+        </b-list-group-item>
+      </b-list-group>
+    </b-modal>
   </div>
 </template>
 
 <script>
-import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
 import {
   BCard,
   BCardBody,
@@ -248,9 +221,9 @@ import {
   BCol,
 } from "bootstrap-vue";
 import { VueGoodTable } from "vue-good-table";
-import { exportExcel } from "@/views/components/exportExcel/ExportExcel";
-import VnindexCreateOrEdit from "./vnindex-create-or-edit.vue";
+import RcmHideData from "./vnindex-hide-data.vue";
 import vSelect from "vue-select";
+import { getRows } from "@/utils/getRows";
 
 export default {
   components: {
@@ -271,146 +244,26 @@ export default {
     BFormDatepicker,
     BRow,
     BCol,
-    VnindexCreateOrEdit,
+    RcmHideData,
     vSelect,
   },
   data() {
     return {
+      tableId: 2,
       userData: JSON.parse(localStorage.getItem("userData")),
       searchData: {
-        dateFrom: null,
-        dateTo: null,
-      },
-      exportExcelData: {
-        columns: [],
-        rows: [],
+        dateFrom: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        dateTo: new Date().toISOString().split("T")[0],
       },
       pageLength: 10,
-      columns: [
-        {
-          label: "Ngày",
-          field: "date",
-          formatFn: (value) => {
-            if (!value) return "";
-            const date = new Date(value);
-            const day = String(date.getDate()).padStart(2, "0");
-            const month = String(date.getMonth() + 1).padStart(2, "0");
-            const year = date.getFullYear();
-            return `${day}/${month}/${year}`;
-          },
-        },
-        {
-          label: "Điểm",
-          field: "point",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-            filterValue: "",
-            filterFn: (rowValue, filterValue) =>
-              this.applyFilter(rowValue, filterValue, "range"),
-          },
-          tdClass: "text-nowrap",
-          typeFilter: "range",
-        },
-        {
-          label: "P&L",
-          field: "pl",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-            filterValue: "",
-            filterFn: (rowValue, filterValue) =>
-              this.applyFilter(rowValue, filterValue, "range"),
-          },
-          typeFilter: "range",
-        },
-        {
-          label: "Lệnh mua/bán",
-          field: "rcm",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-            filterValue: "",
-            filterFn: (rowValue, filterValue) =>
-              this.applyFilter(rowValue, filterValue, "multiselect"),
-          },
-          typeFilter: "multiselect",
-        },
-        {
-          label: "Tỷ lệ mua/bán",
-          field: "bsRate",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-            filterValue: "",
-            filterFn: (rowValue, filterValue) =>
-              this.applyFilter(rowValue, filterValue, "range"),
-          },
-          formatFn: (value) => {
-            return value + "%";
-          },
-          typeFilter: "range",
-        },
-        {
-          label: "Rủi to Vn-index",
-          field: "riskVnindex",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-            filterValue: "",
-            filterFn: (rowValue, filterValue) =>
-              this.applyFilter(rowValue, filterValue, "multiselect"),
-          },
-          typeFilter: "multiselect",
-        },
-        {
-          label: "Rủi to vĩ mô",
-          field: "riskMacro",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-            filterValue: "",
-            filterFn: (rowValue, filterValue) =>
-              this.applyFilter(rowValue, filterValue, "multiselect"),
-          },
-          typeFilter: "multiselect",
-        },
-        {
-          label: "PE",
-          field: "pe",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-            filterValue: "",
-            filterFn: (rowValue, filterValue) =>
-              this.applyFilter(rowValue, filterValue, "range"),
-          },
-          typeFilter: "range",
-        },
-        {
-          label: "PB",
-          field: "pb",
-          filterOptions: {
-            enabled: true,
-            placeholder: "Lọc",
-            filterValue: "",
-            filterFn: (rowValue, filterValue) =>
-              this.applyFilter(rowValue, filterValue, "range"),
-          },
-          typeFilter: "range",
-        },
-        {
-          label: "",
-          field: "action",
-        },
-      ],
+      columns: [],
       rows: [],
       showModal: false,
-      edit: false,
-      id: null,
       showFilterModal: false,
+      showAnnotationModal: false,
       tempFilters: {},
-      filterModalKey: 0,
+      filterModalKey: Date.now(),
+      annotations: [],
     };
   },
   computed: {
@@ -436,27 +289,62 @@ export default {
     },
   },
   async created() {
-    this.exportExcelData.columns = this.columns.map((item) => {
-      return {
-        label: item.label,
-        field: item.field,
-        width: 30,
-      };
-    });
+    await this.getColumns();
     await this.getData();
   },
   methods: {
+    initModalFilter() {
+      const initOptionsFilter = () => {
+        const keys = this.columns.filter(
+          (item) => item.typeFilter === "multiselect"
+        );
+
+        const uniqueValues = {}; // Đối tượng chứa Set cho từng key
+        keys.forEach((key) => {
+          const field = key.field;
+          uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
+          this.tempFilters[field] = {};
+          this.tempFilters[field].label = key.label;
+          this.tempFilters[field].field = field;
+          this.tempFilters[field].options = [];
+          this.tempFilters[field].typeFilter = "multiselect";
+        });
+
+        // Duyệt qua toàn bộ dữ liệu
+        this.rows.forEach((item) => {
+          keys.forEach((key) => {
+            const field = key.field;
+            if (!uniqueValues[field].has(item[field])) {
+              uniqueValues[field].add(item[field]);
+              this.tempFilters[field].options.push({
+                label: item[field],
+                value: item[field],
+              });
+            }
+          });
+        });
+      };
+      const initRangeFilter = () => {
+        const keys = this.columns.filter((item) => item.typeFilter === "range");
+        keys.forEach((key) => {
+          const field = key.field;
+          this.tempFilters[field] = {};
+          this.tempFilters[field].label = key.label;
+          this.tempFilters[field].field = field;
+          this.tempFilters[field].minValue = null;
+          this.tempFilters[field].maxValue = null;
+          this.tempFilters[field].typeFilter = "range";
+        });
+      };
+      initOptionsFilter();
+      initRangeFilter();
+      this.filterModalKey = Date.now();
+    },
     openFilter() {
       Object.keys(this.tempFilters).forEach((key) => {
         delete this.tempFilters[key].value;
       });
       this.showFilterModal = true;
-      // this.filterModalKey++;
-    },
-    initModalFilter() {
-      this.initOptionsFilter();
-      this.initRangeFilter();
-      this.filterModalKey++;
     },
     setFilter() {
       Object.keys(this.tempFilters).forEach((key) => {
@@ -472,49 +360,6 @@ export default {
             column.filterOptions.filterValue = `${this.tempFilters[key].minValue} - ${this.tempFilters[key].maxValue}`;
           }
         }
-      });
-    },
-    initOptionsFilter() {
-      const keys = this.columns.filter(
-        (item) => item.typeFilter === "multiselect"
-      );
-
-      const uniqueValues = {}; // Đối tượng chứa Set cho từng key
-      keys.forEach((key) => {
-        const field = key.field;
-        uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
-        this.tempFilters[field] = {};
-        this.tempFilters[field].label = key.label;
-        this.tempFilters[field].field = field;
-        this.tempFilters[field].options = [];
-        this.tempFilters[field].typeFilter = "multiselect";
-      });
-
-      // Duyệt qua toàn bộ dữ liệu
-      this.rows.forEach((item) => {
-        keys.forEach((key) => {
-          const field = key.field;
-          if (!uniqueValues[field].has(item[field])) {
-            uniqueValues[field].add(item[field]);
-            this.tempFilters[field].options.push({
-              label: item[field],
-              value: item[field],
-            });
-          }
-        });
-      });
-    },
-    initRangeFilter() {
-      const keys = this.columns.filter((item) => item.typeFilter === "range");
-      console.log(keys);
-      keys.forEach((key) => {
-        const field = key.field;
-        this.tempFilters[field] = {};
-        this.tempFilters[field].label = key.label;
-        this.tempFilters[field].field = field;
-        this.tempFilters[field].minValue = null;
-        this.tempFilters[field].maxValue = null;
-        this.tempFilters[field].typeFilter = "range";
       });
     },
     applyFilter(rowValue, filterValue, filterType) {
@@ -545,111 +390,93 @@ export default {
           return true;
       }
     },
-    async deleteList() {
-      const selectedItems = this.$refs.goodTableRef.selectedRows.map(
-        (item) => item.id
+    async getColumns() {
+      const data = await this.$callApi.get(
+        "/api/columns/table/" + this.tableId
       );
-      if (!selectedItems.length) {
-        this.$toast({
-          component: ToastificationContent,
-          position: "top-right",
-          props: {
-            title: "Không có mục nào được chọn!",
-            icon: "AlertCircleIcon",
-            variant: "danger",
-          },
-        });
-        return;
-      }
+      const temp = data.data.data.sort((a, b) => a.indexing - b.indexing);
+      this.columns = [];
+      this.annotations = [];
+      temp.forEach((item) => {
+        let column = {
+          label: item.label,
+          thClass: "text-left",
+          field: item.key,
+        };
+        switch (item.dataType) {
+          case "date":
+            column = {
+              ...column,
+              type: "date",
+              dateInputFormat: "yyyy-MM-dd HH:mm:ss",
+              dateOutputFormat: "dd/MM/yyyy",
+            };
+            break;
+          case "number":
+            column = {
+              ...column,
+              type: "number",
+            };
+            break;
+          case "rate":
+            column = {
+              ...column,
+              type: "number",
+              formatFn: (value) => value + "%",
+              sortFn: (x, y) => Number(x) - Number(y),
+            };
+            break;
+          default:
+            break;
+        }
+        switch (item.filterType) {
+          case "none":
+            break;
+          case "nomal":
+            column.filterOptions = {
+              enabled: true,
+              placeholder: "Lọc",
+            };
+            break;
+          default:
+            column.filterOptions = {
+              enabled: true,
+              placeholder: "Lọc",
+              filterValue: "",
+              filterFn: (rowValue, filterValue) =>
+                this.applyFilter(rowValue, filterValue, item.filterType),
+            };
+            column.typeFilter = item.filterType;
+            break;
+        }
+        this.columns.push(column);
 
-      try {
-        await this.$callApi.post("/api/vnindexpicks/deleteList", {
-          ids: selectedItems,
-        });
-
-        this.$toast({
-          component: ToastificationContent,
-          position: "top-right",
-          props: {
-            title: `Thao tác thành công`,
-            icon: "CheckIcon",
-            variant: "success",
-            text: `Đã xóa các bản ghi được`,
-          },
-        });
-
-        // Làm mới danh sách hoặc cập nhật trạng thái trong bảng
-        this.getData();
-      } catch (error) {
-        this.$toast({
-          component: ToastificationContent,
-          position: "top-right",
-          props: {
-            title: `Thao tác thất bại`,
-            icon: "AlertCircleIcon",
-            variant: "danger",
-            text: error,
-          },
-        });
-        console.error(
-          "Error updating status:",
-          error.response || error.message
-        );
-      }
+        if (item.annotation) {
+          this.annotations.push({
+            keyword: item.label,
+            annotation: item.annotation,
+          });
+        }
+      });
     },
     async getData() {
-      await this.$callApi
-        .post("/api/vnindexpicks/date", {
-          dateFrom: this.searchData.dateFrom,
-          dateTo: this.searchData.dateTo,
-        })
-        .then((res) => {
-          const data = res.data.data;
-          this.rows = data.sort((a, b) => b.id - a.id);
-          this.rows = data;
+      const params = {
+        tableId: this.tableId,
+        dateFrom: this.searchData.dateFrom,
+        dateTo: this.searchData.dateTo,
+        codes: null,
+        sortBy: ["date desc"],
+      };
+      const data = await getRows(this.$callApi, params);
+      this.rows = [];
+      data.forEach((item) => {
+        this.rows.push({
+          code: item.code,
+          date: item.date,
+          ...item.data,
         });
+      });
       this.initModalFilter();
-    },
-    exportToExcel() {
-      exportExcel(
-        this.$XLSX,
-        "Report.xlsx",
-        this.filteredRows,
-        this.exportExcelData.columns
-      );
-    },
-    showModalEdit(id) {
-      this.id = id;
-      this.edit = true;
-      this.showModal = true;
-    },
-    async deleteItem(id) {
-      await this.$callApi
-        .delete("/api/vnindexpicks/" + id)
-        .then(async () => {
-          await this.getData();
-          this.$toast({
-            component: ToastificationContent,
-            position: "top-right",
-            props: {
-              title: `Xóa thành công`,
-              icon: "CheckIcon",
-              variant: "success",
-            },
-          });
-        })
-        .catch(() => {
-          this.$toast({
-            component: ToastificationContent,
-            position: "top-right",
-            props: {
-              title: `Lỗi`,
-              icon: "AlertCircleIcon",
-              variant: "danger",
-              text: error,
-            },
-          });
-        });
     },
   },
 };

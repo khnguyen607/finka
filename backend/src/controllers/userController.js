@@ -49,7 +49,7 @@ const getUserById = async (req, res) => {
 
 const createUser = async (req, res) => {
   try {
-    const { email, password, name, phone, role, status } = req.body;
+    const { email, password, name, phone, provide, role, status } = req.body;
 
     // Hash mật khẩu
     const hashedPassword = await bcryptjs.hash(password, SALT_ROUNDS);
@@ -60,6 +60,7 @@ const createUser = async (req, res) => {
       password: hashedPassword,
       name,
       phone,
+      provide,
       role,
       status,
     });
@@ -163,6 +164,7 @@ const register = async (req, res) => {
       password: hashedPassword,
       name,
       phone,
+      provide,
       role: "USER",
       status: "pending",
     });
@@ -175,6 +177,7 @@ const register = async (req, res) => {
         email: user.email,
         name: user.name,
         phone: user.phone,
+        provide,
       },
     });
   } catch (error) {
@@ -190,7 +193,7 @@ const register = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, password, name, phone, role, status } = req.body;
+    const { email, password, name, phone, provide, role, status } = req.body;
 
     const user = await User.findByPk(id); // Tìm người dùng theo ID
     if (!user) {
@@ -207,6 +210,7 @@ const updateUser = async (req, res) => {
       ...(password !== null && { password: hashedPassword }),
       name,
       phone,
+      provide,
       role,
       status,
     });

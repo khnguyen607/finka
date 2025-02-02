@@ -39,6 +39,10 @@ const Columns = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    annotation: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     isRequired: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

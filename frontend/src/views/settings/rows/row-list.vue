@@ -11,6 +11,16 @@
           @input="getData"
         />
         <div v-if="userData.role === 'ADMIN'">
+          <b-button variant="primary" class="btn-icon mr-1" @click="openFilter">
+            <feather-icon icon="FilterIcon" />
+          </b-button>
+          <b-button
+            variant="success"
+            class="btn-icon mr-1"
+            @click="exportToExcel"
+          >
+            <feather-icon icon="DownloadIcon" />
+          </b-button>
           <b-button variant="danger" class="btn-icon mr-1" @click="deleteList">
             <feather-icon icon="TrashIcon" />
           </b-button>
@@ -43,6 +53,9 @@
             :pagination-options="{
               enabled: true,
               perPage: pageLength,
+            }"
+            :sort-options="{
+              enabled: false,
             }"
           >
             <template slot="table-row" slot-scope="props">
@@ -143,6 +156,56 @@
         "
       />
     </b-modal>
+
+    <!-- Filter Modal -->
+    <b-modal
+      v-if="showFilterModal"
+      v-model="showFilterModal"
+      id="filter-modal"
+      title="Bộ lọc nâng cao"
+      ok-title="Lọc"
+      cancel-title="Đóng"
+      @ok="setFilter()"
+    >
+      <!-- Form Lọc -->
+      <div v-for="(item, index) in tempFilters" :key="index">
+        <b-form-group
+          v-if="item.typeFilter === 'multiselect'"
+          :label="item.label"
+        >
+          <v-select
+            v-model="item.value"
+            :options="item.options"
+            :reduce="(option) => option.value"
+            multiple
+            :clearable="false"
+          />
+        </b-form-group>
+
+        <b-form-group v-if="item.typeFilter === 'range'" :label="item.label">
+          <b-row>
+            <b-col>
+              <b-form-input
+                v-model="item.minValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối thiểu"
+              />
+            </b-col>
+            <b-col>
+              <b-form-input
+                v-model="item.maxValue"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Giá trị tối đa"
+              />
+            </b-col>
+          </b-row>
+        </b-form-group>
+      </div>
+    </b-modal>
   </div>
 </template>
 
@@ -170,6 +233,7 @@ import { VueGoodTable } from "vue-good-table";
 import TableCreateOrEdit from "./row-create-or-edit.vue";
 import vSelect from "vue-select";
 import { getRows } from "@/utils/getRows";
+import { exportExcel } from "@/views/components/exportExcel/ExportExcelWithoutData";
 
 export default {
   components: {
@@ -206,7 +270,6 @@ export default {
       edit: false,
       id: null,
       tempFilters: {},
-      filterModalKey: 0,
       tables: [
         {
           value: null,
@@ -215,6 +278,8 @@ export default {
       ],
       tableSelected: null,
       pageLength: 10,
+      showFilterModal: false,
+      filterModalKey: Date.now(),
     };
   },
   computed: {
@@ -238,6 +303,113 @@ export default {
     await this.getTables();
   },
   methods: {
+    openFilter() {
+      Object.keys(this.tempFilters).forEach((key) => {
+        delete this.tempFilters[key].value;
+      });
+      this.showFilterModal = true;
+    },
+    initModalFilter() {
+      this.initOptionsFilter();
+      this.initRangeFilter();
+      this.filterModalKey = Date.now();
+    },
+    setFilter() {
+      Object.keys(this.tempFilters).forEach((key) => {
+        const column = this.columns.find((item) => item.field === key);
+        if (column) {
+          if (Array.isArray(this.tempFilters[key].value)) {
+            column.filterOptions.filterValue =
+              this.tempFilters[key].value.join(",");
+          } else if (
+            this.tempFilters[key].minValue ||
+            this.tempFilters[key].maxValue
+          ) {
+            column.filterOptions.filterValue = `${this.tempFilters[key].minValue} - ${this.tempFilters[key].maxValue}`;
+          }
+        }
+      });
+    },
+    initOptionsFilter() {
+      const keys = this.columns.filter(
+        (item) => item.typeFilter === "multiselect"
+      );
+
+      const uniqueValues = {}; // Đối tượng chứa Set cho từng key
+      keys.forEach((key) => {
+        const field = key.field;
+        uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
+        this.tempFilters[field] = {};
+        this.tempFilters[field].label = key.label;
+        this.tempFilters[field].field = field;
+        this.tempFilters[field].options = [];
+        this.tempFilters[field].typeFilter = "multiselect";
+      });
+
+      // Duyệt qua toàn bộ dữ liệu
+      this.rows.forEach((item) => {
+        keys.forEach((key) => {
+          const field = key.field;
+          if (!uniqueValues[field].has(item[field])) {
+            uniqueValues[field].add(item[field]);
+            this.tempFilters[field].options.push({
+              label: item[field],
+              value: item[field],
+            });
+          }
+        });
+      });
+    },
+    initRangeFilter() {
+      const keys = this.columns.filter((item) => item.typeFilter === "range");
+      keys.forEach((key) => {
+        const field = key.field;
+        this.tempFilters[field] = {};
+        this.tempFilters[field].label = key.label;
+        this.tempFilters[field].field = field;
+        this.tempFilters[field].minValue = null;
+        this.tempFilters[field].maxValue = null;
+        this.tempFilters[field].typeFilter = "range";
+      });
+    },
+    applyFilter(rowValue, filterValue, filterType) {
+      switch (filterType) {
+        case "multiselect":
+          const data = filterValue.split(",");
+          if (!Array.isArray(data) || filterValue.length === 0) {
+            return true;
+          }
+          return filterValue.includes(rowValue);
+
+        case "range":
+          const [min, max] = filterValue
+            .split("-")
+            .map((v) => parseFloat(v.trim()));
+          if (!isNaN(min) && !isNaN(max)) {
+            return rowValue >= min && rowValue <= max;
+          }
+          if (!isNaN(min)) {
+            return rowValue >= min;
+          }
+          if (!isNaN(max)) {
+            return rowValue <= max;
+          }
+          return true;
+
+        default:
+          return true;
+      }
+    },
+    exportToExcel() {
+      const exportExcelData = this.columns.map((item) => {
+        return {
+          label: item.label,
+          field: item.field,
+          width: 30,
+        };
+      });
+      exportExcel(this.$XLSX, "Template.xlsx", exportExcelData);
+    },
     async getTables() {
       await this.$callApi.get("/api/tables").then((res) => {
         const data = res.data.data;
@@ -384,7 +556,7 @@ export default {
           ...item.data,
         });
       });
-      console.log(this.rows);
+      this.initModalFilter();
     },
     showModalEdit(id) {
       this.id = id;

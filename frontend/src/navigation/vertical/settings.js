@@ -3,12 +3,12 @@ export default [
     header: "Quản trị",
   },
   {
-    title: "Quản lý cấu trúc",
+    title: "Quản lý bảng",
     icon: "DatabaseIcon",
     children: [
       {
-        title: "Cột dữ liệu",
-        route: "settings-tables",
+        title: "Cấu trúc bảng",
+        route: "settings-columns",
       },
       {
         title: "Dữ liệu bảng",

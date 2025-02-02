@@ -26,19 +26,10 @@ export default [
     resource: "ACL",
   },
   {
-    title: "Mã cổ phiếu",
+    title: "Chi tiết phiên",
     icon: "SearchIcon",
-    children: [
-      {
-        title: "Danh sách mã cổ phiếu",
-        route: "reports-stocks-list",
-      },
-      {
-        title: "Chi tiết phiên",
-        route: "reports-stock-details",
-        action: "read",
-        resource: "ACL",
-      },
-    ],
+    route: "reports-stock-details",
+    action: "read",
+    resource: "ACL",
   },
 ];

@@ -24,7 +24,7 @@ const convertExcelDate = (excelDate) => {
  */
 
 const processValue = (value, columnIndex) => {
-  if (columnIndex === 0) {
+  if (columnIndex === 0 && value !== null && value !== undefined && !isNaN(Date.parse(value))) {
     return convertExcelDate(value);
   } else {
     // Xử lý logic cho các cột khác

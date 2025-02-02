@@ -27,7 +27,14 @@
       <b-card-body>
         <div>
           <!-- table -->
-          <vue-good-table ref="goodTableRef" :columns="columns" :rows="rows">
+          <vue-good-table
+            ref="goodTableRef"
+            :columns="columns"
+            :rows="rows"
+            :sort-options="{
+              enabled: false,
+            }"
+          >
             <template slot="table-row" slot-scope="props">
               <span v-if="props.column.field === 'review'">
                 <b-badge :variant="statusVariant(props.row.review)">
@@ -73,7 +80,7 @@
       hide-footer
       size="lg"
     >
-      <TableCreateOrEdit
+      <ColumnCreateOrEdit
         :edit="edit"
         :id="id"
         :tableId="tableSelected"
@@ -108,7 +115,7 @@ import {
   BCol,
 } from "bootstrap-vue";
 import { VueGoodTable } from "vue-good-table";
-import TableCreateOrEdit from "./table-create-or-edit.vue";
+import ColumnCreateOrEdit from "./column-create-or-edit.vue";
 import vSelect from "vue-select";
 
 export default {
@@ -130,7 +137,7 @@ export default {
     BFormDatepicker,
     BRow,
     BCol,
-    TableCreateOrEdit,
+    ColumnCreateOrEdit,
     vSelect,
   },
   data() {
@@ -140,6 +147,7 @@ export default {
         dateFrom: null,
         dateTo: null,
       },
+      pageLength: 10,
       columns: [
         {
           label: "Thứ tự",
@@ -168,6 +176,8 @@ export default {
                 return "Số";
               case "date":
                 return "Ngày";
+              case "rate":
+                return "Tỉ lệ %";
               default:
                 return "";
             }
@@ -193,30 +203,34 @@ export default {
           },
         },
         {
-          label: "Giá trị mặc định",
-          field: "defaultValue",
-          tdClass: "text-nowrap",
+          label: "Chú thích",
+          field: "annotation",
+        },
+        // {
+        //   label: "Giá trị mặc định",
+        //   field: "defaultValue",
+        //   tdClass: "text-nowrap",
 
-          formatFn: (value) => {
-            const defaultValue = value == null ? "Không có" : value;
-            return defaultValue;
-          },
-        },
-        {
-          label: "Bắt buộc",
-          field: "isRequired",
-          tdClass: "text-nowrap",
-          formatFn: (value) => {
-            switch (value) {
-              case 0:
-                return "Không";
-              case 1:
-                return "Có";
-              default:
-                return "";
-            }
-          },
-        },
+        //   formatFn: (value) => {
+        //     const defaultValue = value == null ? "Không có" : value;
+        //     return defaultValue;
+        //   },
+        // },
+        // {
+        //   label: "Bắt buộc",
+        //   field: "isRequired",
+        //   tdClass: "text-nowrap",
+        //   formatFn: (value) => {
+        //     switch (value) {
+        //       case 0:
+        //         return "Không";
+        //       case 1:
+        //         return "Có";
+        //       default:
+        //         return "";
+        //     }
+        //   },
+        // },
         {
           label: "",
           field: "action",
@@ -227,7 +241,6 @@ export default {
       edit: false,
       id: null,
       tempFilters: {},
-      filterModalKey: 0,
       tables: [
         {
           value: null,

@@ -42,6 +42,7 @@
                 { value: 'number', text: 'Số' },
                 { value: 'string', text: 'Chuỗi' },
                 { value: 'date', text: 'Ngày' },
+                { value: 'rate', text: 'Tỉ lệ %' },
               ]"
             />
           </b-form-group>
@@ -62,6 +63,16 @@
           </b-form-group>
         </b-col>
         <b-col md="4">
+          <b-form-group label="Chú thích" label-for="mc-annotation">
+            <b-form-input
+              v-model="dataForm.annotation"
+              id="mc-annotation"
+              type="text"
+              placeholder="Chú thích"
+            />
+          </b-form-group>
+        </b-col>
+        <!-- <b-col md="4">
           <b-form-group label="Giá trị mặc định" label-for="mc-defaultValue">
             <b-form-input
               v-model="dataForm.defaultValue"
@@ -80,7 +91,7 @@
             >
             </b-form-checkbox>
           </b-form-group>
-        </b-col>
+        </b-col> -->
 
         <!-- submit and reset -->
         <b-col md="12">
@@ -159,6 +170,7 @@ export default {
         label: null,
         dataType: null,
         filterType: null,
+        annotation: null,
         isRequired: 0,
         defaultValue: null,
       },

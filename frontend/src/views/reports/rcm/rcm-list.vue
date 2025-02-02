@@ -3,17 +3,23 @@
     <b-card p-5>
       <b-card-header class="d-flex justify-content-between align-items-center">
         <b-card-title>Mã cổ phiếu khuyến nghị</b-card-title>
-        <div v-if="userData.role === 'ADMIN'">
-          <b-button
-            variant="primary"
+        <div>
+          <!-- <b-button
+            variant="secondary"
             class="btn-icon mr-1"
-            @click="
-              showModal = true;
-              edit = false;
-              id = null;
-            "
+            @click="showModal = true"
           >
-            <feather-icon icon="PlusIcon" />
+            <feather-icon icon="EyeOffIcon" />
+          </b-button> -->
+          <b-button variant="primary" class="btn-icon mr-1" @click="openFilter">
+            <feather-icon icon="FilterIcon" />
+          </b-button>
+          <b-button
+            variant="info"
+            class="btn-icon"
+            @click="showAnnotationModal = true"
+          >
+            <feather-icon icon="AlertCircleIcon" />
           </b-button>
         </div>
       </b-card-header>
@@ -42,19 +48,6 @@
             </b-form-group>
           </b-col>
         </b-row>
-
-        <div class="text-right mb-1">
-          <b-button
-            variant="primary"
-            class="btn-icon btn-sm mr-1"
-            @click="openFilter"
-          >
-            <feather-icon icon="FilterIcon" size="15" />
-          </b-button>
-          <b-button variant="info" class="btn-icon btn-sm">
-            <feather-icon icon="AlertCircleIcon" size="15" />
-          </b-button>
-        </div>
         <div>
           <!-- table -->
           <vue-good-table
@@ -65,6 +58,7 @@
               enabled: true,
               perPage: pageLength,
             }"
+            @on-cell-click="onClickCode"
           >
             <template slot="table-row" slot-scope="props">
               <span v-if="props.column.field === 'review'">
@@ -124,17 +118,14 @@
     <b-modal
       id="add-item-modal"
       v-model="showModal"
-      :title="edit ? 'Chỉnh sửa' : 'Thêm mới'"
+      title="Hiển thị cột"
       hide-footer
       size="lg"
     >
-      <RcmCreateOrEdit
-        :edit="edit"
-        :id="id"
+      <RcmHideData
         @submitted="
           getData();
           showModal = false;
-          edit = false;
         "
       />
     </b-modal>
@@ -188,6 +179,26 @@
         </b-form-group>
       </div>
     </b-modal>
+
+    <!-- Annotation Modal -->
+    <b-modal
+      v-model="showAnnotationModal"
+      title="Chú thích"
+      hide-footer
+      centered
+    >
+      <b-list-group>
+        <b-list-group-item
+          v-for="(annotation, index) in annotations"
+          :key="index"
+        >
+          <strong
+            >{{ annotation.keyword }}:
+            <span class="text-muted">{{ annotation.annotation }}</span></strong
+          >
+        </b-list-group-item>
+      </b-list-group>
+    </b-modal>
   </div>
 </template>
 
@@ -211,7 +222,7 @@ import {
   BCol,
 } from "bootstrap-vue";
 import { VueGoodTable } from "vue-good-table";
-import RcmCreateOrEdit from "./rcm-create-or-edit.vue";
+import RcmHideData from "./rcm-hide-data.vue";
 import vSelect from "vue-select";
 import { getRows } from "@/utils/getRows";
 
@@ -234,25 +245,28 @@ export default {
     BFormDatepicker,
     BRow,
     BCol,
-    RcmCreateOrEdit,
+    RcmHideData,
     vSelect,
   },
   data() {
     return {
+      tableId: 1,
       userData: JSON.parse(localStorage.getItem("userData")),
       searchData: {
-        dateFrom: null,
-        dateTo: null,
+        dateFrom: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split("T")[0],
+        dateTo: new Date().toISOString().split("T")[0],
       },
       pageLength: 10,
       columns: [],
       rows: [],
       showModal: false,
-      edit: false,
-      id: null,
       showFilterModal: false,
+      showAnnotationModal: false,
       tempFilters: {},
       filterModalKey: Date.now(),
+      annotations: [],
     };
   },
   computed: {
@@ -282,16 +296,63 @@ export default {
     await this.getData();
   },
   methods: {
+    onClickCode(params) {
+      if (params.column.field == "code") {
+        this.$router.push(`/reports/stock-details/list/${params.row.code}`);
+      }
+    },
+    initModalFilter() {
+      const initOptionsFilter = () => {
+        const keys = this.columns.filter(
+          (item) => item.typeFilter === "multiselect"
+        );
+
+        const uniqueValues = {}; // Đối tượng chứa Set cho từng key
+        keys.forEach((key) => {
+          const field = key.field;
+          uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
+          this.tempFilters[field] = {};
+          this.tempFilters[field].label = key.label;
+          this.tempFilters[field].field = field;
+          this.tempFilters[field].options = [];
+          this.tempFilters[field].typeFilter = "multiselect";
+        });
+
+        // Duyệt qua toàn bộ dữ liệu
+        this.rows.forEach((item) => {
+          keys.forEach((key) => {
+            const field = key.field;
+            if (!uniqueValues[field].has(item[field])) {
+              uniqueValues[field].add(item[field]);
+              this.tempFilters[field].options.push({
+                label: item[field],
+                value: item[field],
+              });
+            }
+          });
+        });
+      };
+      const initRangeFilter = () => {
+        const keys = this.columns.filter((item) => item.typeFilter === "range");
+        keys.forEach((key) => {
+          const field = key.field;
+          this.tempFilters[field] = {};
+          this.tempFilters[field].label = key.label;
+          this.tempFilters[field].field = field;
+          this.tempFilters[field].minValue = null;
+          this.tempFilters[field].maxValue = null;
+          this.tempFilters[field].typeFilter = "range";
+        });
+      };
+      initOptionsFilter();
+      initRangeFilter();
+      this.filterModalKey = Date.now();
+    },
     openFilter() {
       Object.keys(this.tempFilters).forEach((key) => {
         delete this.tempFilters[key].value;
       });
       this.showFilterModal = true;
-    },
-    initModalFilter() {
-      this.initOptionsFilter();
-      this.initRangeFilter();
-      this.filterModalKey = Date.now();
     },
     setFilter() {
       Object.keys(this.tempFilters).forEach((key) => {
@@ -307,48 +368,6 @@ export default {
             column.filterOptions.filterValue = `${this.tempFilters[key].minValue} - ${this.tempFilters[key].maxValue}`;
           }
         }
-      });
-    },
-    initOptionsFilter() {
-      const keys = this.columns.filter(
-        (item) => item.typeFilter === "multiselect"
-      );
-
-      const uniqueValues = {}; // Đối tượng chứa Set cho từng key
-      keys.forEach((key) => {
-        const field = key.field;
-        uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
-        this.tempFilters[field] = {};
-        this.tempFilters[field].label = key.label;
-        this.tempFilters[field].field = field;
-        this.tempFilters[field].options = [];
-        this.tempFilters[field].typeFilter = "multiselect";
-      });
-
-      // Duyệt qua toàn bộ dữ liệu
-      this.rows.forEach((item) => {
-        keys.forEach((key) => {
-          const field = key.field;
-          if (!uniqueValues[field].has(item[field])) {
-            uniqueValues[field].add(item[field]);
-            this.tempFilters[field].options.push({
-              label: item[field],
-              value: item[field],
-            });
-          }
-        });
-      });
-    },
-    initRangeFilter() {
-      const keys = this.columns.filter((item) => item.typeFilter === "range");
-      keys.forEach((key) => {
-        const field = key.field;
-        this.tempFilters[field] = {};
-        this.tempFilters[field].label = key.label;
-        this.tempFilters[field].field = field;
-        this.tempFilters[field].minValue = null;
-        this.tempFilters[field].maxValue = null;
-        this.tempFilters[field].typeFilter = "range";
       });
     },
     applyFilter(rowValue, filterValue, filterType) {
@@ -380,69 +399,84 @@ export default {
       }
     },
     async getColumns() {
-      const data = await this.$callApi.get("/api/columns/table/1");
+      const data = await this.$callApi.get(
+        "/api/columns/table/" + this.tableId
+      );
       const temp = data.data.data.sort((a, b) => a.indexing - b.indexing);
       this.columns = [];
+      this.annotations = [];
       temp.forEach((item) => {
-        if (item.dataType == "date") {
-          this.columns.push({
-            label: "Ngày",
-            field: "date",
-            formatFn: (value) => {
-              if (!value) return "";
-              const date = new Date(value);
-              const day = String(date.getDate()).padStart(2, "0");
-              const month = String(date.getMonth() + 1).padStart(2, "0");
-              const year = date.getFullYear();
-              return `${day}/${month}/${year}`;
-            },
+        let column = {
+          label: item.label,
+          thClass: "text-left",
+          field: item.key,
+        };
+        if (item.key == "code") {
+          column["tdClass"] = "text-primary cursor-pointer";
+        }
+        switch (item.dataType) {
+          case "date":
+            column = {
+              ...column,
+              type: "date",
+              dateInputFormat: "yyyy-MM-dd HH:mm:ss",
+              dateOutputFormat: "dd/MM/yyyy",
+            };
+            break;
+          case "number":
+            column = {
+              ...column,
+              type: "number",
+            };
+            break;
+          case "rate":
+            column = {
+              ...column,
+              type: "number",
+              formatFn: (value) => value + "%",
+              sortFn: (x, y) => Number(x) - Number(y),
+            };
+            break;
+          default:
+            break;
+        }
+        switch (item.filterType) {
+          case "none":
+            break;
+          case "nomal":
+            column.filterOptions = {
+              enabled: true,
+              placeholder: "Lọc",
+            };
+            break;
+          default:
+            column.filterOptions = {
+              enabled: true,
+              placeholder: "Lọc",
+              filterValue: "",
+              filterFn: (rowValue, filterValue) =>
+                this.applyFilter(rowValue, filterValue, item.filterType),
+            };
+            column.typeFilter = item.filterType;
+            break;
+        }
+        this.columns.push(column);
+
+        if (item.annotation) {
+          this.annotations.push({
+            keyword: item.label,
+            annotation: item.annotation,
           });
-        } else {
-          switch (item.filterType) {
-            case "none":
-              this.columns.push({
-                label: item.label,
-                field: item.key,
-                tdClass: "text-nowrap",
-              });
-              break;
-            case "nomal":
-              this.columns.push({
-                label: item.label,
-                field: item.key,
-                filterOptions: {
-                  enabled: true,
-                  placeholder: "Lọc",
-                },
-                tdClass: "text-nowrap",
-              });
-              break;
-            default:
-              this.columns.push({
-                label: item.label,
-                field: item.key,
-                filterOptions: {
-                  enabled: true,
-                  placeholder: "Lọc",
-                  filterValue: "",
-                  filterFn: (rowValue, filterValue) =>
-                    this.applyFilter(rowValue, filterValue, item.filterType),
-                },
-                tdClass: "text-nowrap",
-                typeFilter: item.filterType,
-              });
-              break;
-          }
         }
       });
     },
     async getData() {
       const params = {
-        tableId: 1,
+        tableId: this.tableId,
         dateFrom: this.searchData.dateFrom,
         dateTo: this.searchData.dateTo,
         codes: null,
-        sortBy: null,
+        sortBy: ["date desc"],
       };
       const data = await getRows(this.$callApi, params);
       this.rows = [];

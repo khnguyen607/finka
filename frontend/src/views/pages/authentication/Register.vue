@@ -76,6 +76,26 @@
                 </validation-provider>
               </b-form-group>
 
+              <b-form-group label="Tỉnh thành" label-for="register-provide">
+                <validation-provider
+                  #default="{ errors }"
+                  name="text"
+                  rules="required"
+                  v-slot="{ invalid }"
+                >
+                  <v-select
+                    v-model="provide"
+                    id="register-provide"
+                    name="register-provide"
+                    :options="provideList"
+                    :reduce="(option) => option.label"
+                    :clearable="false"
+                    :state="errors.length > 0 ? false : null"
+                  />
+                  <small class="text-danger">{{ errors[0] }}</small>
+                </validation-provider>
+              </b-form-group>
+
               <!-- password -->
               <b-form-group label-for="register-password" label="Mật khẩu">
                 <validation-provider
@@ -154,6 +174,7 @@ import { required, email } from "@validations";
 import { togglePasswordVisibility } from "@core/mixins/ui/forms";
 import store from "@/store/index";
 import ToastificationContent from "@core/components/toastification/ToastificationContent.vue";
+import vSelect from "vue-select";
 
 export default {
   components: {
@@ -174,6 +195,7 @@ export default {
     // validations
     ValidationProvider,
     ValidationObserver,
+    vSelect,
   },
   mixins: [togglePasswordVisibility],
   data() {
@@ -182,6 +204,8 @@ export default {
       userEmail: "",
       password: "",
       phone: "",
+      provide: "",
+      provideList: [],
       sideImg: require("@/assets/images/pages/register-v2.svg"),
       // validation
       required,
@@ -201,7 +225,18 @@ export default {
       return this.sideImg;
     },
   },
+  async mounted() {
+    await this.getProvide();
+  },
   methods: {
+    async getProvide() {
+      const response = await this.$callApi.get(
+        "https://vn-public-apis.fpo.vn/provinces/getAll?limit=-1"
+      );
+      this.provideList = response.data.data.data.map((item) => ({
+        label: item.name,
+      }));
+    },
     register() {
       this.$refs.registerForm.validate().then(async (success) => {
         try {

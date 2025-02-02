@@ -38,6 +38,10 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    province: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   },
   {
     tableName: "users",

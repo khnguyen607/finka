@@ -79,7 +79,6 @@ import {
 } from "bootstrap-vue";
 import Ripple from "vue-ripple-directive";
 import { excelToJson } from "@/utils/excelToJson";
-import { del } from "vue";
 
 export default {
   components: {

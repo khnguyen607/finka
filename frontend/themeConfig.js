@@ -12,7 +12,7 @@ export const $themeConfig = {
     appName: "Dashboard", // Will update name in navigation menu (Branding)
     // eslint-disable-next-line global-require
     appLogoImage: require("./public/logo.svg"), // Will update logo in navigation menu (Branding)
-    URL_API_DEV: "http://localhost:5000",
+    URL_API_DEV: "http://192.168.2.3:5000",
     URL_API_PROD: "/",
   },
   layout: {
