@@ -203,16 +203,7 @@ const createModalList = async (req, res) => {
     // Kiểm tra cờ ghi đè (overwrite)
     const options = overwrite
       ? {
-          updateOnDuplicate: [
-            "field",
-            "price",
-            "rcm",
-            "bsRate",
-            "bsCycle",
-            "pte",
-            "ptb",
-            "roe",
-          ],
+          updateOnDuplicate: ["data"],
         }
       : {};
 

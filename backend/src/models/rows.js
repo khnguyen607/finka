@@ -21,11 +21,11 @@ const Rows = sequelize.define(
     },
     code: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     date: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
+      allowNull: true,
     },
     data: {
       type: DataTypes.JSON, // Dữ liệu động được lưu dưới dạng JSON

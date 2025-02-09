@@ -379,6 +379,4 @@ export default {
 };
 </script>
 
-<style lang="scss">
-@import "@core/scss/vue/libs/vue-good-table.scss";
-</style>
+<style lang="scss"></style>

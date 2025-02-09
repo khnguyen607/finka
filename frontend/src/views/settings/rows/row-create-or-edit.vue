@@ -8,6 +8,7 @@
               v-model="dataForm[item.key]"
               :id="'mc-' + item.key"
               :type="item.type"
+              :step="item.type === 'number' ? 0.01 : null"
               :placeholder="item.label"
             />
           </b-form-group>

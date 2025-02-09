@@ -123,4 +123,13 @@ export default {
 table.vgt-table {
   font-size: 13px !important;
 }
+
+table.vgt-table thead tr:nth-child(2) {
+  display: none;
+}
+
+table.vgt-table thead th {
+  text-align: left;
+  vertical-align: top;
+}
 </style>

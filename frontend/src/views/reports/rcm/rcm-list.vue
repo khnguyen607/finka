@@ -141,25 +141,28 @@
       @ok="setFilter()"
     >
       <!-- Form Lọc -->
-      <div v-for="(item, index) in tempFilters" :key="index">
+      <div v-for="(key, index) in Object.keys(tempFilters)" :key="index">
         <b-form-group
-          v-if="item.typeFilter === 'multiselect'"
-          :label="item.label"
+          v-if="tempFilters[key].typeFilter === 'multiselect'"
+          :label="tempFilters[key].label"
         >
           <v-select
-            v-model="item.value"
-            :options="item.options"
+            v-model="multiSelected[key]"
+            :options="tempFilters[key].options"
             :reduce="(option) => option.value"
             multiple
             :clearable="false"
           />
         </b-form-group>
 
-        <b-form-group v-if="item.typeFilter === 'range'" :label="item.label">
+        <b-form-group
+          v-if="tempFilters[key].typeFilter === 'range'"
+          :label="tempFilters[key].label"
+        >
           <b-row>
             <b-col>
               <b-form-input
-                v-model="item.minValue"
+                v-model="tempFilters[key].minValue"
                 type="number"
                 min="0"
                 step="0.01"
@@ -168,7 +171,7 @@
             </b-col>
             <b-col>
               <b-form-input
-                v-model="item.maxValue"
+                v-model="tempFilters[key].maxValue"
                 type="number"
                 min="0"
                 step="0.01"
@@ -267,6 +270,7 @@ export default {
       tempFilters: {},
       filterModalKey: Date.now(),
       annotations: [],
+      multiSelected: {},
     };
   },
   computed: {
@@ -301,7 +305,13 @@ export default {
         this.$router.push(`/reports/stock-details/list/${params.row.code}`);
       }
     },
+    openFilter() {
+      
+      this.showFilterModal = true;
+    },
     initModalFilter() {
+      this.multiSelected = {};
+      this.tempFilters = {};
       const initOptionsFilter = () => {
         const keys = this.columns.filter(
           (item) => item.typeFilter === "multiselect"
@@ -348,13 +358,10 @@ export default {
       initRangeFilter();
       this.filterModalKey = Date.now();
     },
-    openFilter() {
-      Object.keys(this.tempFilters).forEach((key) => {
-        delete this.tempFilters[key].value;
-      });
-      this.showFilterModal = true;
-    },
     setFilter() {
+      Object.keys(this.tempFilters).forEach((key) => {
+        this.tempFilters[key].value = this.multiSelected[key];
+      });
       Object.keys(this.tempFilters).forEach((key) => {
         const column = this.columns.find((item) => item.field === key);
         if (column) {
@@ -493,6 +500,4 @@ export default {
 };
 </script>
 
-<style lang="scss">
-@import "@core/scss/vue/libs/vue-good-table.scss";
-</style>
+<style lang="scss"></style>

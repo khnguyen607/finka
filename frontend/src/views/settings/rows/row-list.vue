@@ -159,7 +159,6 @@
 
     <!-- Filter Modal -->
     <b-modal
-      v-if="showFilterModal"
       v-model="showFilterModal"
       id="filter-modal"
       title="Bộ lọc nâng cao"
@@ -168,25 +167,28 @@
       @ok="setFilter()"
     >
       <!-- Form Lọc -->
-      <div v-for="(item, index) in tempFilters" :key="index">
+      <div v-for="(key, index) in Object.keys(tempFilters)" :key="index">
         <b-form-group
-          v-if="item.typeFilter === 'multiselect'"
-          :label="item.label"
+          v-if="tempFilters[key].typeFilter === 'multiselect'"
+          :label="tempFilters[key].label"
         >
           <v-select
-            v-model="item.value"
-            :options="item.options"
+            v-model="multiSelected[key]"
+            :options="tempFilters[key].options"
             :reduce="(option) => option.value"
             multiple
             :clearable="false"
           />
         </b-form-group>
 
-        <b-form-group v-if="item.typeFilter === 'range'" :label="item.label">
+        <b-form-group
+          v-if="tempFilters[key].typeFilter === 'range'"
+          :label="tempFilters[key].label"
+        >
           <b-row>
             <b-col>
               <b-form-input
-                v-model="item.minValue"
+                v-model="tempFilters[key].minValue"
                 type="number"
                 min="0"
                 step="0.01"
@@ -195,7 +197,7 @@
             </b-col>
             <b-col>
               <b-form-input
-                v-model="item.maxValue"
+                v-model="tempFilters[key].maxValue"
                 type="number"
                 min="0"
                 step="0.01"
@@ -280,6 +282,7 @@ export default {
       pageLength: 10,
       showFilterModal: false,
       filterModalKey: Date.now(),
+      multiSelected: {},
     };
   },
   computed: {
@@ -304,17 +307,61 @@ export default {
   },
   methods: {
     openFilter() {
-      Object.keys(this.tempFilters).forEach((key) => {
-        delete this.tempFilters[key].value;
-      });
       this.showFilterModal = true;
     },
     initModalFilter() {
-      this.initOptionsFilter();
-      this.initRangeFilter();
+      this.multiSelected = {};
+      this.tempFilters = {};
+      const initOptionsFilter = () => {
+        const keys = this.columns.filter(
+          (item) => item.typeFilter === "multiselect"
+        );
+
+        const uniqueValues = {}; // Đối tượng chứa Set cho từng key
+        keys.forEach((key) => {
+          const field = key.field;
+          uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
+          this.tempFilters[field] = {};
+          this.tempFilters[field].label = key.label;
+          this.tempFilters[field].field = field;
+          this.tempFilters[field].options = [];
+          this.tempFilters[field].typeFilter = "multiselect";
+        });
+
+        // Duyệt qua toàn bộ dữ liệu
+        this.rows.forEach((item) => {
+          keys.forEach((key) => {
+            const field = key.field;
+            if (!uniqueValues[field].has(item[field])) {
+              uniqueValues[field].add(item[field]);
+              this.tempFilters[field].options.push({
+                label: item[field],
+                value: item[field],
+              });
+            }
+          });
+        });
+      };
+      const initRangeFilter = () => {
+        const keys = this.columns.filter((item) => item.typeFilter === "range");
+        keys.forEach((key) => {
+          const field = key.field;
+          this.tempFilters[field] = {};
+          this.tempFilters[field].label = key.label;
+          this.tempFilters[field].field = field;
+          this.tempFilters[field].minValue = null;
+          this.tempFilters[field].maxValue = null;
+          this.tempFilters[field].typeFilter = "range";
+        });
+      };
+      initOptionsFilter();
+      initRangeFilter();
       this.filterModalKey = Date.now();
     },
     setFilter() {
+      Object.keys(this.tempFilters).forEach((key) => {
+        this.tempFilters[key].value = this.multiSelected[key];
+      });
       Object.keys(this.tempFilters).forEach((key) => {
         const column = this.columns.find((item) => item.field === key);
         if (column) {
@@ -328,48 +375,6 @@ export default {
             column.filterOptions.filterValue = `${this.tempFilters[key].minValue} - ${this.tempFilters[key].maxValue}`;
           }
         }
-      });
-    },
-    initOptionsFilter() {
-      const keys = this.columns.filter(
-        (item) => item.typeFilter === "multiselect"
-      );
-
-      const uniqueValues = {}; // Đối tượng chứa Set cho từng key
-      keys.forEach((key) => {
-        const field = key.field;
-        uniqueValues[field] = new Set(); // Khởi tạo Set cho mỗi field
-        this.tempFilters[field] = {};
-        this.tempFilters[field].label = key.label;
-        this.tempFilters[field].field = field;
-        this.tempFilters[field].options = [];
-        this.tempFilters[field].typeFilter = "multiselect";
-      });
-
-      // Duyệt qua toàn bộ dữ liệu
-      this.rows.forEach((item) => {
-        keys.forEach((key) => {
-          const field = key.field;
-          if (!uniqueValues[field].has(item[field])) {
-            uniqueValues[field].add(item[field]);
-            this.tempFilters[field].options.push({
-              label: item[field],
-              value: item[field],
-            });
-          }
-        });
-      });
-    },
-    initRangeFilter() {
-      const keys = this.columns.filter((item) => item.typeFilter === "range");
-      keys.forEach((key) => {
-        const field = key.field;
-        this.tempFilters[field] = {};
-        this.tempFilters[field].label = key.label;
-        this.tempFilters[field].field = field;
-        this.tempFilters[field].minValue = null;
-        this.tempFilters[field].maxValue = null;
-        this.tempFilters[field].typeFilter = "range";
       });
     },
     applyFilter(rowValue, filterValue, filterType) {
@@ -480,56 +485,58 @@ export default {
       const temp = data.data.data.sort((a, b) => a.indexing - b.indexing);
       this.columns = [];
       temp.forEach((item) => {
-        if (item.dataType == "date") {
-          this.columns.push({
-            label: "Ngày",
-            field: "date",
-            formatFn: (value) => {
-              if (!value) return "";
-              const date = new Date(value);
-              const day = String(date.getDate()).padStart(2, "0");
-              const month = String(date.getMonth() + 1).padStart(2, "0");
-              const year = date.getFullYear();
-              return `${day}/${month}/${year}`;
-            },
-          });
-        } else {
-          switch (item.filterType) {
-            case "none":
-              this.columns.push({
-                label: item.label,
-                field: item.key,
-                tdClass: "text-nowrap",
-              });
-              break;
-            case "nomal":
-              this.columns.push({
-                label: item.label,
-                field: item.key,
-                filterOptions: {
-                  enabled: true,
-                  placeholder: "Lọc",
-                },
-                tdClass: "text-nowrap",
-              });
-              break;
-            default:
-              this.columns.push({
-                label: item.label,
-                field: item.key,
-                filterOptions: {
-                  enabled: true,
-                  placeholder: "Lọc",
-                  filterValue: "",
-                  filterFn: (rowValue, filterValue) =>
-                    this.applyFilter(rowValue, filterValue, item.filterType),
-                },
-                tdClass: "text-nowrap",
-                typeFilter: item.filterType,
-              });
-              break;
-          }
+        let column = {
+          label: item.label,
+          thClass: "text-left",
+          field: item.key,
+        };
+        switch (item.dataType) {
+          case "date":
+            column = {
+              ...column,
+              type: "date",
+              dateInputFormat: "yyyy-MM-dd HH:mm:ss",
+              dateOutputFormat: "dd/MM/yyyy",
+            };
+            break;
+          case "number":
+            column = {
+              ...column,
+              type: "number",
+            };
+            break;
+          case "rate":
+            column = {
+              ...column,
+              type: "number",
+              formatFn: (value) => value + "%",
+              sortFn: (x, y) => Number(x) - Number(y),
+            };
+            break;
+          default:
+            break;
         }
+        switch (item.filterType) {
+          case "none":
+            break;
+          case "nomal":
+            column.filterOptions = {
+              enabled: true,
+              placeholder: "Lọc",
+            };
+            break;
+          default:
+            column.filterOptions = {
+              enabled: true,
+              placeholder: "Lọc",
+              filterValue: "",
+              filterFn: (rowValue, filterValue) =>
+                this.applyFilter(rowValue, filterValue, item.filterType),
+            };
+            column.typeFilter = item.filterType;
+            break;
+        }
+        this.columns.push(column);
       });
       this.columns.push({
         label: "Thao tác",
@@ -595,6 +602,4 @@ export default {
 };
 </script>
 
-<style lang="scss">
-@import "@core/scss/vue/libs/vue-good-table.scss";
-</style>
+<style lang="scss"></style>

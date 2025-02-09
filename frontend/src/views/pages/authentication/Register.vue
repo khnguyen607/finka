@@ -76,7 +76,7 @@
                 </validation-provider>
               </b-form-group>
 
-              <b-form-group label="Tỉnh thành" label-for="register-provide">
+              <b-form-group label="Tỉnh thành" label-for="register-province">
                 <validation-provider
                   #default="{ errors }"
                   name="text"
@@ -84,10 +84,10 @@
                   v-slot="{ invalid }"
                 >
                   <v-select
-                    v-model="provide"
-                    id="register-provide"
-                    name="register-provide"
-                    :options="provideList"
+                    v-model="province"
+                    id="register-province"
+                    name="register-province"
+                    :options="provinceList"
                     :reduce="(option) => option.label"
                     :clearable="false"
                     :state="errors.length > 0 ? false : null"
@@ -204,8 +204,8 @@ export default {
       userEmail: "",
       password: "",
       phone: "",
-      provide: "",
-      provideList: [],
+      province: "",
+      provinceList: [],
       sideImg: require("@/assets/images/pages/register-v2.svg"),
       // validation
       required,
@@ -233,7 +233,7 @@ export default {
       const response = await this.$callApi.get(
         "https://vn-public-apis.fpo.vn/provinces/getAll?limit=-1"
       );
-      this.provideList = response.data.data.data.map((item) => ({
+      this.provinceList = response.data.data.data.map((item) => ({
         label: item.name,
       }));
     },
@@ -245,6 +245,7 @@ export default {
             email: this.userEmail,
             phone: this.phone,
             password: this.password,
+            province: this.province,
           });
           if ((response.status = "success")) {
             this.$toast({

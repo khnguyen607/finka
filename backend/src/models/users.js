@@ -37,6 +37,7 @@ const User = sequelize.define(
     codeLiked: {
       type: DataTypes.STRING,
       allowNull: false,
+      defaultValue: "[]",
     },
     province: {
       type: DataTypes.STRING,

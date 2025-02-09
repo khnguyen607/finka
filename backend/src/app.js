@@ -4,10 +4,6 @@ const cors = require("cors");
 
 const userRoutes = require("./routes/userRoutes");
 const getReportRoutes = require("./routes/getReportRoutes");
-const stockpickRoutes = require("./routes/stockpickRoutes");
-const stockRoutes = require("./routes/stockRoutes");
-const stockDetailRoutes = require("./routes/stockDetailRoutes");
-const vnindexpickRoutes = require("./routes/vnindexpickRoutes");
 const tableRoutes = require("./routes/tableRoutes");
 const columnRoutes = require("./routes/columnRoutes");
 const rowRoutes = require("./routes/rowRoutes");
@@ -21,10 +17,6 @@ app.use(bodyParser.json());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/getReports", getReportRoutes);
-app.use("/api/stockpicks", stockpickRoutes);
-app.use("/api/stocks", stockRoutes);
-app.use("/api/stockDetails", stockDetailRoutes);
-app.use("/api/vnindexpicks", vnindexpickRoutes);
 app.use("/api/tables", tableRoutes);
 app.use("/api/columns", columnRoutes);
 app.use("/api/rows", rowRoutes);
