@@ -199,6 +199,7 @@
             >{{ annotation.keyword }}:
             <span class="text-muted">{{ annotation.annotation }}</span></strong
           >
+          <br>
         </b-list-group-item>
       </b-list-group>
     </b-modal>
@@ -306,7 +307,6 @@ export default {
       }
     },
     openFilter() {
-      
       this.showFilterModal = true;
     },
     initModalFilter() {
@@ -373,6 +373,8 @@ export default {
             this.tempFilters[key].maxValue
           ) {
             column.filterOptions.filterValue = `${this.tempFilters[key].minValue} - ${this.tempFilters[key].maxValue}`;
+          } else {
+            column.filterOptions.filterValue = "";
           }
         }
       });
@@ -440,7 +442,7 @@ export default {
             column = {
               ...column,
               type: "number",
-              formatFn: (value) => value + "%",
+              formatFn: (value) => Number(value).toFixed(2) + "%",
               sortFn: (x, y) => Number(x) - Number(y),
             };
             break;

@@ -54,6 +54,12 @@ const createModal = async (req, res) => {
       data: modal,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({ error: "Data already exists" });
+    }
+    if (error.name === "SequelizeValidationError") {
+      return res.status(422).json({ error: error.errors[0].message });
+    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -80,6 +86,12 @@ const updateModal = async (req, res) => {
       data: modal,
     });
   } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({ error: "Data already exists" });
+    }
+    if (error.name === "SequelizeValidationError") {
+      return res.status(422).json({ error: error.errors[0].message });
+    }
     res.status(500).json({ error: error.message });
   }
 };

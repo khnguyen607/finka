@@ -200,6 +200,23 @@ export default {
         // Sau khi thành công, bắn sự kiện
         this.$emit("submitted");
       } catch (error) {
+        let errorMessage = "Có lỗi xảy ra"; // Thông báo lỗi mặc định
+
+        if (error.response && error.response.status) {
+          const status = error.response.status;
+
+          if (status === 409) {
+            errorMessage = "Dữ liệu đã tồn tại.";
+          } else if (status === 422) {
+            errorMessage = "Dữ liệu không hợp lệ.";
+          } else if (error.response.data && error.response.data.message) {
+            // Nếu có thông báo lỗi chi tiết từ backend
+            errorMessage = error.response.data.message;
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
         this.$toast({
           component: ToastificationContent,
           position: "top-right",
@@ -207,7 +224,7 @@ export default {
             title: `Lỗi`,
             icon: "AlertCircleIcon",
             variant: "danger",
-            text: error,
+            text: errorMessage,
           },
         });
       }
