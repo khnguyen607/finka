@@ -429,13 +429,14 @@ export default {
               ...column,
               type: "date",
               dateInputFormat: "yyyy-MM-dd HH:mm:ss",
-              dateOutputFormat: "dd/MM/yyyy",
+              dateOutputFormat: "dd/MMM/yy",
             };
             break;
           case "number":
             column = {
               ...column,
               type: "number",
+              formatFn: (value) => Number(value).toFixed(2),
             };
             break;
           case "rate":
