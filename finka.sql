@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: localhost:3306
--- Thời gian đã tạo: Th2 13, 2025 lúc 03:15 PM
+-- Thời gian đã tạo: Th2 19, 2025 lúc 05:12 PM
 -- Phiên bản máy phục vụ: 8.0.30
 -- Phiên bản PHP: 8.1.10
 
@@ -77,6 +77,25 @@ INSERT INTO `columns` (`id`, `tableId`, `indexing`, `key`, `label`, `dataType`, 
 (34, 4, 20, 'field', 'Ngành', 'string', 'multiselect', NULL, 0, NULL, '2025-02-01 12:02:52', '2025-02-01 12:02:52'),
 (35, 3, 10, 'date', 'Ngày', 'date', 'none', NULL, 0, NULL, '2025-02-02 11:53:52', '2025-02-02 11:53:59'),
 (37, 1, 50, 'rcm', 'Lệnh mua bán', 'string', 'range', NULL, 0, NULL, '2025-02-02 15:08:57', '2025-02-02 15:08:57');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `config`
+--
+
+CREATE TABLE `config` (
+  `code` varchar(64) COLLATE utf8mb4_bin NOT NULL,
+  `data` json NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+--
+-- Đang đổ dữ liệu cho bảng `config`
+--
+
+INSERT INTO `config` (`code`, `data`) VALUES
+('emails', '[\"khnguyen.job@gmail.com\", \"vuoccho1111@gmail.com\"]'),
+('templates', '{\"approveForUser\": {\"from\": \"Kaxim\", \"html\": \"Chúc mừng tài khoản của bạn được kích hoạt thành công\", \"subject\": \"Tài khoản được kích hoạt\"}, \"newRegisterForUser\": {\"from\": \"Kaxim\", \"html\": \"<h1>Hello!</h1><p>Bạn đã đăng ký thành công vui lòng đợi kết quả</p>\", \"subject\": \"Xác nghiệm\"}, \"newRegisterForAdmin\": {\"from\": \"Kaxim\", \"html\": \"Đăng ký mới từ email: ${email}\", \"subject\": \"Xác nghiệm\"}}');
 
 -- --------------------------------------------------------
 
@@ -239,9 +258,7 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `phone`, `provin
 (54, 'Kiên', 'kien@gmail.com', '$2a$10$yR/a3TVLwK7uKNvUs7lOLuH1ALAnG.8l0/..r9ew1rQR8Hwk6XWuy', 'USER', '041655', '', 'accept', '[]', '2025-01-05 08:52:07', '2025-01-13 10:30:27'),
 (55, 'Kiên', 'kien1@gmail.com', '$2a$10$mUSzVULK0WVd2MtVwQoh0uCc4HblVMulq/pJJdvfzblz4B4fBzTle', 'USER', '013215', '', 'accept', '[]', '2025-01-05 08:53:06', '2025-01-13 10:30:28'),
 (56, 'Khôi Nguyên', 'a@gmail.com', '$2a$10$1UrKng9oyif44sRlJDBEoepfi7eHj.ma9tVZ0O3jhPlwxIbyTdaee', 'USER', '0231231', 'Bắc Giang', 'pending', '[]', '2025-02-08 10:29:39', '2025-02-08 10:29:39'),
-(57, 'Hoang ANh', 'da@gmail.com', '$2a$10$daDgvuAg40lbVb62rtAdZOJeme60n.GFCSH9XaK4fMGCHywGtPNHK', 'USER', '01245646', 'Bà Rịa - Vũng Tàu', 'pending', '[]', '2025-02-10 16:22:15', '2025-02-10 16:22:15'),
-(58, 'Nguyễn 29', 'b@gmail.com', '$2a$10$d3U6WLRqLVZI.f0nZXOPv.t6veyO25WqaPl0GVHhbYRfLbNZlsWii', 'USER', '0936073098', 'Nam Định', 'accept', '[]', '2025-02-11 03:34:57', '2025-02-11 06:45:16'),
-(59, 'Phạm Nhật Vượng', 'Phamnhatvuong@gmail.com', '$2a$10$qt838SAHqCAItWDiO73zq.GUSWEyjeTSB2sWqcVW/0QNPErCC4pXS', 'USER', '0936073098', 'Hà Tĩnh', 'pending', '[]', '2025-02-11 03:47:04', '2025-02-11 03:47:04');
+(57, 'Hoang ANh', 'da@gmail.com', '$2a$10$daDgvuAg40lbVb62rtAdZOJeme60n.GFCSH9XaK4fMGCHywGtPNHK', 'USER', '01245646', 'Bà Rịa - Vũng Tàu', 'pending', '[]', '2025-02-10 16:22:15', '2025-02-10 16:22:15');
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -253,6 +270,13 @@ INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `phone`, `provin
 ALTER TABLE `columns`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `tableId` (`tableId`,`key`);
+
+--
+-- Chỉ mục cho bảng `config`
+--
+ALTER TABLE `config`
+  ADD PRIMARY KEY (`code`),
+  ADD UNIQUE KEY `code` (`code`);
 
 --
 -- Chỉ mục cho bảng `rows`
@@ -303,7 +327,7 @@ ALTER TABLE `tables`
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

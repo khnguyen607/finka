@@ -3,6 +3,7 @@ const bcryptjs = require("bcryptjs");
 const SALT_ROUNDS = 10;
 const SECRET_KEY = process.env.SECRET_KEY;
 const User = require("../models/users");
+const { sendMail } = require("../utils/sendMail");
 // const { User } = require("../config/associations");
 
 // Lấy tất cả người dùng
@@ -169,6 +170,10 @@ const register = async (req, res) => {
       status: "pending",
     });
 
+    // Gửi email chất với thống báo đăng ký thành công
+    sendMail("newRegisterForUser", email);
+    sendMail("newRegisterForAdmin", email);
+
     // Trả về kết quả thành công
     return res.status(201).json({
       status: "success",
@@ -264,6 +269,12 @@ const updateUserStatus = async (req, res) => {
         .json({ message: "Không tìm thấy người dùng nào để cập nhật." });
     }
 
+    if (status === "accept") {
+      ids.forEach(async (id) => {
+        const modal = await User.findByPk(id);
+        sendMail("approveForUser", modal.dataValues.email);
+      });
+    }
     res.status(200).json({
       message: "Cập nhật trạng thái thành công.",
       updatedCount: updatedUsers[0], // Số lượng bản ghi được cập nhật
