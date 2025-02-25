@@ -7,6 +7,7 @@ const getReportRoutes = require("./routes/getReportRoutes");
 const tableRoutes = require("./routes/tableRoutes");
 const columnRoutes = require("./routes/columnRoutes");
 const rowRoutes = require("./routes/rowRoutes");
+const configRoutes = require("./routes/configRoutes");
 
 const app = express();
 
@@ -20,5 +21,6 @@ app.use("/api/getReports", getReportRoutes);
 app.use("/api/tables", tableRoutes);
 app.use("/api/columns", columnRoutes);
 app.use("/api/rows", rowRoutes);
+app.use("/api/configs", configRoutes);
 
 module.exports = app;

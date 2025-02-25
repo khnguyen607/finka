@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const Modal = require("../models/config");
+const Modal = require("../models/configs");
 async function getModalByCode(code) {
   try {
     const modal = await Modal.findByPk(code);
@@ -20,14 +20,13 @@ async function getModalByCode(code) {
   }
 }
 
-const sendMail = async (type, email) => {
+const sendMail = async (type, email, data = {}) => {
   const emails = await getModalByCode("emails");
   const templates = await getModalByCode("templates");
   switch (type) {
     // Gửi cho ng dùng khi đăng ký thành công
     case "newRegisterForUser":
       try {
-        console.log(templates.newRegisterForUser);
         await transporter.sendMail({
           from: templates.newRegisterForUser.from + " <your-email@gmail.com>",
           to: email,
@@ -41,12 +40,21 @@ const sendMail = async (type, email) => {
     case "newRegisterForAdmin":
       try {
         emails.forEach(async (email) => {
+          const replacements = {
+            "${email}": data.email,
+            "${name}": data.name,
+            "${phone}": data.phone,
+            "${province}": data.province,
+          };
           await transporter.sendMail({
             from:
               templates.newRegisterForAdmin.from + " <your-email@gmail.com>",
             to: email,
             subject: templates.newRegisterForAdmin.subject,
-            html: templates.newRegisterForAdmin.html.replace("${email}", email),
+            html: templates.newRegisterForAdmin.html.replace(
+              /\$\{(.*?)\}/g,
+              (_, key) => replacements[`$\{${key}\}`] || ""
+            ),
           });
         });
       } catch (error) {

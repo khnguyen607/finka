@@ -21,4 +21,9 @@ export default [
     route: "settings-users",
     icon: "UserIcon",
   },
+  {
+    title: "Cấu hình email",
+    route: "settings-configs",
+    icon: "MailIcon",
+  },
 ];

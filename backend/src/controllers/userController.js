@@ -172,7 +172,7 @@ const register = async (req, res) => {
 
     // Gửi email chất với thống báo đăng ký thành công
     sendMail("newRegisterForUser", email);
-    sendMail("newRegisterForAdmin", email);
+    sendMail("newRegisterForAdmin", email, { email, name, phone, province });
 
     // Trả về kết quả thành công
     return res.status(201).json({
